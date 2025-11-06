@@ -4,6 +4,7 @@ namespace App\Services\Auth;
 
 use App\Enums\ResponseCode\HttpStatusCode;
 use App\Enums\User\UserStatus;
+use App\Enums\User\UserType;
 use App\Helpers\ApiResponse;
 use App\Http\Resources\User\LoggedInUserResource;
 use Illuminate\Support\Facades\Hash;
@@ -28,8 +29,11 @@ class AuthService
             if (!$user || !Hash::check($data['password'], $user->password)) {
                 return ApiResponse::error(__('auth.failed'), [], HttpStatusCode::UNAUTHORIZED);
             }
-            if ($user->is_active == UserStatus::INACTIVE) {
+            if ($user->is_active == UserStatus::INACTIVE ) {
                 return ApiResponse::error(__('auth.inactive_account'), [], HttpStatusCode::UNAUTHORIZED);
+            }
+            if($user->user_type !=UserType::ADMIN->value){
+                return ApiResponse::error(__('auth.unauthorized_access'), [], HttpStatusCode::UNAUTHORIZED);
             }
             // // Revoke old tokens (optional)
             // $user->tokens()->delete();

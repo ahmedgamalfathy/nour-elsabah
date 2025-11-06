@@ -99,7 +99,7 @@ Route::prefix('v1/website')->group(function(){
     Route::apiResource('sliders', SliderWebsite::class)->only(['index'])->names([
         'index' => 'slidersWeb.index',
     ]);
-    // Route::apiResource('categories',CategoryWebsite::class)->only(['index']);
+    Route::apiResource('categoryWebsite',CategoryWebsite::class)->only(['index']);
     Route::apiResource('products',ProductWebsiteController::class)->only(['index','show'])->names([
         'index' => 'productsWeb.index',
         'show'=>'productsWeb.show'

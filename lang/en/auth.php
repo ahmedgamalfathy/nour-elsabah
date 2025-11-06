@@ -18,6 +18,7 @@ return [
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
     'inactive_account' => 'This account is not activated.',
     'logged_out' => 'You have been logged out.',
-    'code_expired' => 'The code has expired. Please request a new one!'
+    'code_expired' => 'The code has expired. Please request a new one!',
+    'unauthorized_access' => 'You do not have permission to access this resource.',
 
 ];
