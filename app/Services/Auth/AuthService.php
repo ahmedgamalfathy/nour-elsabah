@@ -25,7 +25,8 @@ class AuthService
     public function login(array $data)
     {
         try {
-            $user = User::where('username', $data['username'])->first();
+            $user = User::where('username', $data['username'])
+            ->orWhere('email',$data['username'])->first();
             if (!$user || !Hash::check($data['password'], $user->password)) {
                 return ApiResponse::error(__('auth.failed'), [], HttpStatusCode::UNAUTHORIZED);
             }
