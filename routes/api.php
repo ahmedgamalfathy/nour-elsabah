@@ -42,8 +42,11 @@ use App\Http\Controllers\Api\V1\Website\Order\OrderController as OrderWebsite;
 use App\Http\Controllers\Api\V1\Website\Slider\SliderController as SliderWebsite;
 use App\Http\Controllers\Api\V1\Website\Category\CategoryController as CategoryWebsite;
 use App\Http\Controllers\Api\V1\Website\Auth\Profile\ChangePasswordController as ChangePasswordWebsite ;
-
+use App\Http\Controllers\Api\V1\Website\Notification\NotificationController;
+use App\Http\Controllers\Api\V1\Dashboard\Notification\SendNotificationController;
+//SendCodeController
 Route::prefix('v1/admin')->group(function () {
+    Route::post('/send-notification',SendNotificationController::class);
     Route::get('/pages/{slug}', [StaticPageController::class, 'show']);
     Route::put('/pages/{slug}', [StaticPageController::class, 'update']);
     Route::controller(AuthController::class)->prefix('auth')->group(function () {
@@ -128,6 +131,14 @@ Route::prefix('v1/website')->group(function(){
     });
 
     Route::post('/payment/process', [PaymentController::class, 'paymentProcess']);
+
+    Route::get('/notifications',[NotificationController::class,'notifications']);
+    Route::get('/auth_unread_notifications',[NotificationController::class,'auth_unread_notifications']);
+    Route::get('/auth_read_notifications',[NotificationController::class,'auth_read_notifications']);
+    Route::get('/auth_read_notification/{id}',[NotificationController::class,'auth_read_notification']);
+    Route::DELETE('/auth_delete_notifications',[NotificationController::class,'auth_delete_notifications']);
+
+
 });//website ...
 // Route::match(['GET','POST'],'/payment/callback', [PaymentController::class, 'callBack']);
 Route::match(['GET', 'POST'], '/payment/callback/paypal', [PaymentController::class, 'paypalCallback']);

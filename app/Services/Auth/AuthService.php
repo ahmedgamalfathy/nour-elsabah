@@ -2,26 +2,54 @@
 
 namespace App\Services\Auth;
 
-use App\Enums\ResponseCode\HttpStatusCode;
-use App\Enums\User\UserStatus;
+use App\Models\User;
 use App\Enums\User\UserType;
 use App\Helpers\ApiResponse;
-use App\Http\Resources\User\LoggedInUserResource;
-use Illuminate\Support\Facades\Hash;
+use App\Enums\User\UserStatus;
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-use App\Services\UserRolePremission\UserPermissionService;
+use Illuminate\Support\Facades\Hash;
+use App\Enums\ResponseCode\HttpStatusCode;
 use Illuminate\Validation\ValidationException;
-
+use App\Http\Resources\User\LoggedInUserResource;
+use App\Services\UserRolePremission\UserPermissionService;
+use App\Services\Upload\UploadService;
+use Illuminate\Http\UploadedFile;
 class AuthService
 {
     protected $userPermissionService;
+    protected $uploadService;
 
-    public function __construct(UserPermissionService $userPermissionService)
+    public function __construct(UserPermissionService $userPermissionService ,UploadService $uploadService)
     {
         $this->userPermissionService = $userPermissionService;
+        $this->uploadService = $uploadService;
     }
+    public function register(array $userData)
+    {
+        $avatarPath = null;
+        if(isset($userData['avatar']) && $userData['avatar'] instanceof UploadedFile){
+            $avatarPath =  $this->uploadService->uploadFile($userData['avatar'], 'avatars');
+        }
 
+        $user = User::create([
+            'name' => $userData['name'],
+            'username' => $userData['username'],
+            'email' => $userData['email']??null,
+            'phone' => $userData['phone']??null,
+            'address' => $userData['address']??null,
+            'password' => $userData['password'],
+            'is_active' => UserStatus::from($userData['isActive'])->value,
+            'avatar' => $avatarPath,
+        ]);
+
+        $role = Role::find($userData['roleId']);
+        $user->assignRole($role->id);
+
+        return $user;
+
+
+    }
     public function login(array $data)
     {
         try {

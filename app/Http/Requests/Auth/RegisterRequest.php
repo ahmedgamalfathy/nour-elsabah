@@ -23,22 +23,23 @@ class RegisterRequest extends FormRequest
      */
     public function rules(): array
     {
+        //'name', 'username', 'email', 'phone', 'address', 'password', 'is_active', 'avatar'
         return [
             'name' => 'required',
             'email'=> 'required|email|unique:users,email',
             'phone' => '',
-            'birthDate' => '',
-            'status' => 'required',
+            'address' => '',
+            'username' => 'required|unique:users,username',
             'password'=> [
                 'required',
                 'min:8',
                 'regex:/^.*(?=.{1,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x]).*$/'
-            ],
-            'userType'=> '',
+            ]
         ];
+
     }
 
-    public function failedValidation(Validator $validator) 
+    public function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json([
             'message' => $validator->errors()

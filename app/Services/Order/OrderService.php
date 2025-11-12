@@ -21,8 +21,10 @@ class OrderService
         $orders = QueryBuilder::for(Order::class)
         ->allowedFilters([
             'number',
-            AllowedFilter::exact('clientId', 'client_id')
+            AllowedFilter::exact('clientId', 'client_id'),
+            'status',
         ])
+
         ->get();
         return $orders;
     }

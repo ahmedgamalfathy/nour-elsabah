@@ -24,7 +24,7 @@ class AuthController extends Controller //implements HasMiddleware
         return $this->authService->login($loginReq->validated());
     }
 
-   
+
     public function logout()
     {
         return $this->authService->logout();
