@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1\Dashboard\Category;
+namespace App\Http\Controllers\Api\V1\Dashboard\MainCategory;
 
 
 

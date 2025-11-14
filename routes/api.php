@@ -26,7 +26,7 @@ use App\Http\Controllers\Api\V1\Website\Client\ClientWebsiteController;
 use App\Http\Controllers\Api\V1\Dashboard\Client\ClientAdressController;
 // use App\Http\Controllers\Api\V1\Dashboard\Category\SubCategoryController;
 use App\Http\Controllers\Api\V1\Dashboard\User\ChangePasswordController;
-use App\Http\Controllers\Api\V1\Dashboard\Category\CategoryTwoController;
+use App\Http\Controllers\Api\V1\Dashboard\MainCategory\CategoryTwoController;
 use App\Http\Controllers\Api\V1\Website\Order\OrderItemWebsiteController;
 use App\Http\Controllers\Api\V1\Website\Product\ProductWebsiteController;
 use App\Http\Controllers\Api\V1\Dashboard\StaticPage\StaticPageController;
