@@ -96,6 +96,7 @@ class CategoryController extends Controller implements HasMiddleware
 
     public function index(Request $request)
     {
+        dd('sddsd');
         $categories = $this->categoryService->allCategories();
 
         return ApiResponse::success(new AllCategoryCollection(PaginateCollection::paginate($categories, $request->pageSize?$request->pageSize:10)));

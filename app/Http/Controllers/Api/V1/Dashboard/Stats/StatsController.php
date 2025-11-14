@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\Client\Client;
 use App\Enums\Order\OrderStatus;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 
 class StatsController extends Controller
 {
@@ -24,14 +25,15 @@ class StatsController extends Controller
             ->get()
             ->pluck('total', 'month');
         $totalRevenue= Order::selectRaw("FORMAT(SUM(price_after_discount) - SUM(total_cost),2)As totalRevenue")->where('status',OrderStatus::DRAFT)->first();
-
         $orderStats=Order::selectRaw("FORMAT(SUM(price_after_discount),2)As totalPrice, count('*') As totalOrders")->first();
         $draftOrderStats=Order::selectRaw("FORMAT(SUM(price_after_discount),2) As totalPrice, count('*') As totalOrders")->where('status',OrderStatus::DRAFT)->first();
         $totalClients=Client::count();
+        $totalUsers=User::count();
         return ApiResponse::success([
             'totalOrders'=>[...$orderStats->toArray()],
             'draftOrderStats'=>[...$draftOrderStats->toArray()],
             'totalClients'=> $totalClients,
+            'totalUsers'=> $totalUsers,
             'totalRevenue'=>$totalRevenue,
             'monthlyTotals'=>$monthlyTotals
 
