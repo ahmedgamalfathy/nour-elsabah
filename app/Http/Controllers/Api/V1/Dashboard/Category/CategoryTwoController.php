@@ -32,8 +32,8 @@ class CategoryTwoController extends Controller implements HasMiddleware
         return [
             new Middleware('auth:api'),
             new Middleware('permission:all_products', only:['index']),
-            new Middleware('permission:create_product', only:['create']),
-            new Middleware('permission:edit_product', only:['edit']),
+            new Middleware('permission:create_product', only:['store']),
+            new Middleware('permission:edit_product', only:['show']),
             new Middleware('permission:update_product', only:['update']),
             new Middleware('permission:destroy_product', only:['destroy']),
         ];
