@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Select\SelectController;
 use App\Http\Controllers\Api\V1\Dashboard\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Dashboard\User\UserController;
+use App\Http\Controllers\Api\V1\Dashboard\Areas\AreaController;
 use App\Http\Controllers\Api\V1\Dashboard\Order\OrderController;
 use App\Http\Controllers\Api\V1\Dashboard\Stats\StatsController;
 use App\Http\Controllers\Api\V1\Dashboard\Client\ClientController;
@@ -15,24 +16,25 @@ use App\Http\Controllers\Api\V1\Website\Payment\PaymentController;
 use App\Http\Controllers\Api\V1\Website\Auth\AuthWebsiteController;
 use App\Http\Controllers\Api\V1\Dashboard\Product\ProductController;
 use App\Http\Controllers\Api\V1\Website\Order\ClientOrderController;
-use App\Http\Controllers\Api\V1\Dashboard\User\UserProfileController;
 // use App\Http\Controllers\Api\V1\Dashboard\Category\CategoryController;
+use App\Http\Controllers\Api\V1\Dashboard\User\UserProfileController;
 use App\Http\Controllers\Api\V1\Website\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\V1\Website\Order\AuthOrderItemController;
 use App\Http\Controllers\Api\V1\Website\Order\CheckQuantityController;
 use App\Http\Controllers\Api\V1\Dashboard\Client\ClientEmailController;
 use App\Http\Controllers\Api\V1\Dashboard\Client\ClientPhoneController;
 use App\Http\Controllers\Api\V1\Website\Client\ClientWebsiteController;
-use App\Http\Controllers\Api\V1\Dashboard\Client\ClientAdressController;
 // use App\Http\Controllers\Api\V1\Dashboard\Category\SubCategoryController;
+use App\Http\Controllers\Api\V1\Dashboard\Client\ClientAdressController;
 use App\Http\Controllers\Api\V1\Dashboard\User\ChangePasswordController;
-use App\Http\Controllers\Api\V1\Dashboard\MainCategory\CategoryTwoController;
 use App\Http\Controllers\Api\V1\Website\Order\OrderItemWebsiteController;
 use App\Http\Controllers\Api\V1\Website\Product\ProductWebsiteController;
 use App\Http\Controllers\Api\V1\Dashboard\StaticPage\StaticPageController;
 use App\Http\Controllers\Api\V1\Website\StaticPage\StaticPageWebController;
 use App\Http\Controllers\Api\V1\Website\Client\ClientEmailWebsiteController;
 use App\Http\Controllers\Api\V1\Website\Client\ClientPhoneWebsiteController;
+use App\Http\Controllers\Api\V1\Website\Notification\NotificationController;
+use App\Http\Controllers\Api\V1\Dashboard\MainCategory\CategoryTwoController;
 use App\Http\Controllers\Api\V1\Website\Auth\Profile\ClientProfileController;
 use App\Http\Controllers\Api\V1\Website\Client\ClientAdressWebsiteController;
 use App\Http\Controllers\Api\V1\Website\Product\BestSellingProductController;
@@ -40,10 +42,9 @@ use App\Http\Controllers\Api\V1\Dashboard\Client\ClientCheckDefaultController;
 use App\Http\Controllers\Api\V1\Dashboard\ProductMedia\ProductMediaController;
 use App\Http\Controllers\Api\V1\Website\Order\OrderController as OrderWebsite;
 use App\Http\Controllers\Api\V1\Website\Slider\SliderController as SliderWebsite;
+use App\Http\Controllers\Api\V1\Dashboard\Notification\SendNotificationController;
 use App\Http\Controllers\Api\V1\Website\Category\CategoryController as CategoryWebsite;
 use App\Http\Controllers\Api\V1\Website\Auth\Profile\ChangePasswordController as ChangePasswordWebsite ;
-use App\Http\Controllers\Api\V1\Website\Notification\NotificationController;
-use App\Http\Controllers\Api\V1\Dashboard\Notification\SendNotificationController;
 //SendCodeController
 Route::prefix('v1/admin')->group(function () {
     Route::post('/send-notification',SendNotificationController::class);
@@ -70,7 +71,8 @@ Route::prefix('v1/admin')->group(function () {
         "client-emails"=> ClientEmailController::class,
         "client-addresses"=>ClientAdressController::class,
         "orders" => OrderController::class,
-        "sliders"=> SliderController::class
+        "sliders"=> SliderController::class,
+        'areas' => AreaController::class,
     ]);
     Route::apiResource('users', UserController::class);
     Route::apiSingleton('profile', UserProfileController::class);
