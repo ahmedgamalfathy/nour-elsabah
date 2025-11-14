@@ -27,12 +27,12 @@ class CategoryTwoController extends Controller implements HasMiddleware
     public function __construct(CategoryTwoService $categoryTwoService){
         $this->categoryTwoService = $categoryTwoService;
     }
-    public static function middleware(): array
-    {
-        return [
-            new Middleware('auth:api'),
-        ];
-    }
+    // public static function middleware(): array
+    // {
+    //     return [
+    //         new Middleware('auth:api'),
+    //     ];
+    // }
     public function index(Request $request)
     {
         $categories = $this->categoryTwoService->allCategoryTwo();
