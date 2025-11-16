@@ -22,6 +22,9 @@ class ForgotPasswordController extends Controller
         DB::beginTransaction();
         try{
             $clientUser =ClientUser::where("email", $request->email)->first();
+            if(!$clientUser){
+                return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
+            }
             if($clientUser){
                 $otps = Otp::where("email", $request->email)->get();
                 if($otps->isNotEmpty()){
