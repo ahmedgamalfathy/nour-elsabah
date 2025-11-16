@@ -36,6 +36,7 @@ class ForgotPasswordController extends Controller
                     "email"=>$request->email,
                     "code"=>rand(1000,9999),
                     'expired_at' => now()->addMinutes(5),
+
                 ]);
                 Mail::to($request->email)->send(new ForgotPasswordSendCode($clientUser, $otp->code));
                 $clientUserData =[
@@ -63,6 +64,9 @@ class ForgotPasswordController extends Controller
                 'clientId'=>['required','exists:client_user,id']
             ]);
            $client = ClientUser::findOrFail($data['clientId']);
+           if(!$client){
+            return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
+           }
             $otp= Otp::where('email',$client->email)->first();
            if($otp->code != $data['code']){
              return   ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
@@ -110,6 +114,7 @@ class ForgotPasswordController extends Controller
             'password'=>['required','confirmed',Password::min(8)]
         ]);
         $client = ClientUser::findOrFail($data['clientId']);
+
         $otp= Otp::where('email',$client->email)->first();
         if(!$client){
            return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
@@ -125,7 +130,7 @@ class ForgotPasswordController extends Controller
           return ApiResponse::success($client);
         }catch(\Exception $ex){
             DB::rollBack();
-            return ApiResponse::error(__('crud.server_error'),[],HttpStatusCode::INTERNAL_SERVER_ERROR);
+            return ApiResponse::error(__('crud.server_error'),$ex->getMessage(),HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 }
