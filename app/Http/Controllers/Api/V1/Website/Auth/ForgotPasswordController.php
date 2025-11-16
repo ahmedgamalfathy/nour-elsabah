@@ -22,7 +22,6 @@ class ForgotPasswordController extends Controller
         DB::beginTransaction();
         try{
             $clientUser =ClientUser::where("email", $request->email)->first();
-
             if($clientUser){
                 $otps = Otp::where("email", $request->email)->get();
                 if($otps->isNotEmpty()){
@@ -47,8 +46,10 @@ class ForgotPasswordController extends Controller
             }catch(ValidationException $e){
                 DB::rollBack();
              return ApiResponse::success([] ,__('auth.send_mail'));
+            }catch(\Exception $ex){
+                DB::rollBack();
+                return ApiResponse::error(__('crud.server_error'),$ex->getMessage(),HttpStatusCode::INTERNAL_SERVER_ERROR);
             }
-
     }
     public function verifyCodeEmail(Request $request)
     {
