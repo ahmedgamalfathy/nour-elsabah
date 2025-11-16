@@ -105,6 +105,7 @@ Route::prefix('v1/website')->group(function(){
         'index' => 'slidersWeb.index',
     ]);
     Route::apiResource('categoryWebsite',CategoryWebsite::class)->only(['index']);
+    Route::get('latest-products',[ProductWebsiteController::class ,'latestProducts']);
     Route::apiResource('products',ProductWebsiteController::class)->only(['index','show'])->names([
         'index' => 'productsWeb.index',
         'show'=>'productsWeb.show'

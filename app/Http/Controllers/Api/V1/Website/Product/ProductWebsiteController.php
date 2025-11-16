@@ -27,6 +27,11 @@ class ProductWebsiteController  extends Controller
     {
         $this->productService =$productService;
     }
+    public function latestProducts()
+    {
+        $products = Product::where('status',1)->orderBy('created_at','desc')->limit(10)->get();
+        return ApiResponse::success(AllProductResource::collection($products));
+    }
     public function index(Request $request)
     {
         $categoryActive =Category::where('is_active',IsActive::ACTIVE->value)->pluck('id');
