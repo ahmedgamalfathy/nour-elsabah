@@ -11,9 +11,16 @@ use App\Http\Controllers\Controller;
 use App\Enums\ResponseCode\HttpStatusCode;
 use App\Http\Resources\Coupon\AllCouponResource;
 use App\Http\Resources\Coupon\AllCouponCollection;
-
-class CouponController extends Controller
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+class CouponController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth:api'),
+        ];
+    }
     public function index(Request $request)
     {
         $coupons = Coupon::withCount('usage')

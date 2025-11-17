@@ -9,8 +9,16 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Client\Client;
 use App\Notifications\SendNotificationToClient;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 class SendNotificationController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth:api'),
+        ];
+    }
     /**
      * Handle the incoming request.
      */
