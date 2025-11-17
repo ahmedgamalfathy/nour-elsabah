@@ -10,23 +10,25 @@ use App\Http\Controllers\Api\V1\Dashboard\Areas\AreaController;
 use App\Http\Controllers\Api\V1\Dashboard\Order\OrderController;
 use App\Http\Controllers\Api\V1\Dashboard\Stats\StatsController;
 use App\Http\Controllers\Api\V1\Dashboard\Client\ClientController;
+use App\Http\Controllers\Api\V1\Dashboard\Coupon\CouponController;
 use App\Http\Controllers\Api\V1\Dashboard\Slider\SliderController;
 use App\Http\Controllers\Api\V1\Website\Order\AuthOrderController;
 use App\Http\Controllers\Api\V1\Website\Payment\PaymentController;
 use App\Http\Controllers\Api\V1\Website\Auth\AuthWebsiteController;
 use App\Http\Controllers\Api\V1\Dashboard\Product\ProductController;
-use App\Http\Controllers\Api\V1\Website\Order\ClientOrderController;
 // use App\Http\Controllers\Api\V1\Dashboard\Category\CategoryController;
+use App\Http\Controllers\Api\V1\Website\Order\ClientOrderController;
 use App\Http\Controllers\Api\V1\Dashboard\User\UserProfileController;
 use App\Http\Controllers\Api\V1\Website\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\V1\Website\Order\AuthOrderItemController;
 use App\Http\Controllers\Api\V1\Website\Order\CheckQuantityController;
 use App\Http\Controllers\Api\V1\Dashboard\Client\ClientEmailController;
 use App\Http\Controllers\Api\V1\Dashboard\Client\ClientPhoneController;
-use App\Http\Controllers\Api\V1\Website\Client\ClientWebsiteController;
 // use App\Http\Controllers\Api\V1\Dashboard\Category\SubCategoryController;
+use App\Http\Controllers\Api\V1\Website\Client\ClientWebsiteController;
 use App\Http\Controllers\Api\V1\Dashboard\Client\ClientAdressController;
 use App\Http\Controllers\Api\V1\Dashboard\User\ChangePasswordController;
+use App\Http\Controllers\Api\V1\Website\Coupon\ValidateCouponController;
 use App\Http\Controllers\Api\V1\Website\Order\OrderItemWebsiteController;
 use App\Http\Controllers\Api\V1\Website\Product\ProductWebsiteController;
 use App\Http\Controllers\Api\V1\Dashboard\StaticPage\StaticPageController;
@@ -47,6 +49,8 @@ use App\Http\Controllers\Api\V1\Website\Category\CategoryController as CategoryW
 use App\Http\Controllers\Api\V1\Website\Auth\Profile\ChangePasswordController as ChangePasswordWebsite ;
 //SendCodeController
 Route::prefix('v1/admin')->group(function () {
+    Route::apiResource('coupons', CouponController::class);
+    Route::post('coupons/{id}/toggle-status', [CouponController::class, 'toggleStatus']);
     Route::post('/send-notification',SendNotificationController::class);
     Route::get('/pages/{slug}', [StaticPageController::class, 'show']);
     Route::put('/pages/{slug}', [StaticPageController::class, 'update']);
@@ -84,6 +88,8 @@ Route::prefix('v1/admin')->group(function () {
 
 });//admin
 Route::prefix('v1/website')->group(function(){
+    Route::post('validate-coupon', ValidateCouponController::class)
+    ->middleware('auth:client');
     Route::get('/pages/{slug}', [StaticPageWebController::class, 'show']);
     Route::controller(AuthWebsiteController::class)->group(function () {
         Route::post('register', 'register');
@@ -106,6 +112,7 @@ Route::prefix('v1/website')->group(function(){
     ]);
     Route::apiResource('categoryWebsite',CategoryWebsite::class)->only(['index']);
     Route::get('latest-products',[ProductWebsiteController::class ,'latestProducts']);
+    Route::get('discount-products',[ProductWebsiteController::class ,'discountProducts']);
     Route::apiResource('products',ProductWebsiteController::class)->only(['index','show'])->names([
         'index' => 'productsWeb.index',
         'show'=>'productsWeb.show'
@@ -134,7 +141,6 @@ Route::prefix('v1/website')->group(function(){
     });
 
     Route::post('/payment/process', [PaymentController::class, 'paymentProcess']);
-
     Route::get('/notifications',[NotificationController::class,'notifications']);
     Route::get('/auth_unread_notifications',[NotificationController::class,'auth_unread_notifications']);
     Route::get('/auth_read_notifications',[NotificationController::class,'auth_read_notifications']);

@@ -9,21 +9,25 @@ use App\Models\Client\Client;
 use App\Enums\Order\OrderStatus;
 use App\Enums\Order\DiscountType;
 use function Laravel\Prompts\form;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Enums\Product\LimitedQuantity;
+use App\Services\Coupon\CouponService;
 use App\Services\Order\OrderItemService;
+use App\Enums\ResponseCode\HttpStatusCode;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Routing\Controllers\HasMiddleware;
-
 use App\Http\Resources\Order\Website\OrderResource;
 use App\Http\Resources\Order\OrderItem\Website\OrderItemResource;
 
 class AuthOrderController extends Controller implements HasMiddleware
 {
     public $orderItemService;
-    public function __construct(OrderItemService $orderItemService)
+    public $couponService;
+    public function __construct(OrderItemService $orderItemService, CouponService $couponService)
     {
         $this->orderItemService = $orderItemService;
+        $this->couponService = $couponService;
     }
     public static function middleware(): array
     {
@@ -33,11 +37,13 @@ class AuthOrderController extends Controller implements HasMiddleware
     }
 
     public function store(Request $request){
-
+        try {
+            DB::beginTransaction();
         $data =$request->validate([
                 'orderItems' => 'required|array|min:1',
                 'orderItems.*.productId' => 'required|integer|exists:products,id',
-                'orderItems.*.qty' => 'required|integer|min:1'
+                'orderItems.*.qty' => 'required|integer|min:1',
+                'couponCode' => 'nullable|string|exists:coupons,code',
         ]);
         $auth = $request->user();
         $client = Client::findOrFail($auth->client_id);
@@ -87,12 +93,39 @@ class AuthOrderController extends Controller implements HasMiddleware
         }elseif($order->discount_type == DiscountType::NO_DISCOUNT){
             $totalPriceAfterDiscount = $totalPrice;
         }
+             $couponDiscount = 0;
+            if (!empty($data['couponCode'])) {
+                $couponValidation = $this->couponService->validateCoupon(
+                    $data['couponCode'],
+                    $client->id,
+                    $totalPrice
+                );
+
+                if ($couponValidation['valid']) {
+                    $couponDiscount = $couponValidation['discount'];
+                    $this->couponService->applyCoupon(
+                        $couponValidation['coupon'],
+                        $order,
+                        $client->id,
+                        $couponDiscount
+                    );
+                }
+                $priceAfterCoupon = $totalPrice - $couponDiscount;
+                $totalPriceAfterDiscount = $priceAfterCoupon;
+            }
         $order->update([
             'price_after_discount' => $totalPriceAfterDiscount,
             'price' => $totalPrice,
-            'total_cost'=>$totalCost
+            'total_cost'=>$totalCost,
+            'discount' => $couponDiscount,
+            'discount_type' => DiscountType::COUPON->value,
         ]);
+        DB::commit();
         return ApiResponse::success(new OrderResource($order));
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return ApiResponse::error(__('crud.server_error'),$e->getMessage(),HttpStatusCode::INTERNAL_SERVER_ERROR);
+        }
     }
     public function show($id){
         $order = Order::findOrFail($id);
