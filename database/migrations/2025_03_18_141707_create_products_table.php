@@ -28,7 +28,7 @@ return new class extends Migration
             $table->smallInteger('quantity')->default(0);
             $table->tinyInteger('status')->default(ProductStatus::INACTIVE->value);
             //crossed_price, is_promotion, is_free_shipping, unit_type
-            $table->decimal('crossed_price',10,2)->nullable();
+            $table->decimal('crossed_price',10,2)->default(0);
             $table->boolean('is_promotion')->default(false);
             $table->boolean('is_free_shipping')->default(false);
             $table->tinyInteger('unit_type')->default(UnitType::UNIT->value);

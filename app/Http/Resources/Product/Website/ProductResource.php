@@ -22,7 +22,7 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'price' => number_format($this->price, 2, '.', ''),
             'status' => $this->status,
-            'crossedPrice'=>$this->crossed_price,
+            'crossedPrice'=>$this->crossed_price??0,
             'description' => $this->description??"",
             "categoryId" => $this->category_id??"",
             "subCategoryId"=> $this->sub_category_id??"",
