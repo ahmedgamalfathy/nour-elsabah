@@ -22,13 +22,15 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'price' => number_format($this->price, 2, '.', ''),
             'status' => $this->status,
+            'crossedPrice'=>$this->crossed_price,
             'description' => $this->description??"",
             "categoryId" => $this->category_id??"",
             "subCategoryId"=> $this->sub_category_id??"",
             "specifications"=> $this->specifications??"",
             "stock"=> ($this->quantity <= 0 || $this->quantity < 10) ? ($this->quantity <= 0 ? "" : $this->quantity) : "",
            'productMedia' =>$this->productMedia->isNotEmpty()? ProductMediaResouce::collection($this->productMedia): url('storage/ProductMedia/default-product.jpg'),
-           "similarProducts" => AllProductResource::collection($this->getSimilarProduct())
+           "similarProducts" => AllProductResource::collection($this->getSimilarProduct()),
+
         ];//
     }
 }

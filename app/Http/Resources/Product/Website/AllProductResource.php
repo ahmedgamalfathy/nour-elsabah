@@ -25,6 +25,7 @@ class AllProductResource extends JsonResource
             ? ProductMediaResouce::collection($this->productMedia->take(1))
             : url('storage/ProductMedia/default-product.jpg')),
             'price' => $this->price,
+            'crossedPrice'=>$this->crossed_price,
             'status' => $this->status,
             'description' => $this->description,
         ];
