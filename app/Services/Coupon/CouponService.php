@@ -39,7 +39,7 @@ class CouponService
             'valid' => true,
             'coupon' => $coupon,
             'discount' => $discount,
-            'message' => 'تم تطبيق الكوبون بنجاح'
+            'message' => 'الكوبون صالح'
         ];
     }
 

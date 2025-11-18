@@ -43,7 +43,6 @@ class AuthOrderController extends Controller implements HasMiddleware
                 'orderItems' => 'required|array|min:1',
                 'orderItems.*.productId' => 'required|integer|exists:products,id',
                 'orderItems.*.qty' => 'required|integer|min:1',
-                'couponCode' => 'nullable|string|exists:coupons,code',
         ]);
         $auth = $request->user();
         $client = Client::findOrFail($auth->client_id);
@@ -92,32 +91,11 @@ class AuthOrderController extends Controller implements HasMiddleware
             $totalPriceAfterDiscount = $totalPrice - $data['discount'];
         }elseif($order->discount_type == DiscountType::NO_DISCOUNT){
             $totalPriceAfterDiscount = $totalPrice;
-        }
-             $couponDiscount = 0;
-            if (!empty($data['couponCode'])) {
-                $couponValidation = $this->couponService->validateCoupon(
-                    $data['couponCode'],
-                    $client->id,
-                    $totalPrice
-                );
-
-                if ($couponValidation['valid']) {
-                    $couponDiscount = $couponValidation['discount'];
-                    $this->couponService->applyCoupon(
-                        $couponValidation['coupon'],
-                        $order,
-                        $client->id,
-                        $couponDiscount
-                    );
-                }
-                $priceAfterCoupon = $totalPrice - $couponDiscount;
-                $totalPriceAfterDiscount = $priceAfterCoupon;
-            }
+        }   
         $order->update([
             'price_after_discount' => $totalPriceAfterDiscount,
             'price' => $totalPrice,
-            'total_cost'=>$totalCost,
-            'discount' => $couponDiscount,
+            'total_cost'=>$totalCost,       
             'discount_type' => DiscountType::COUPON->value,
         ]);
         DB::commit();
@@ -154,5 +132,45 @@ class AuthOrderController extends Controller implements HasMiddleware
         $order->status = OrderStatus::IN_CART->value;
         $order->save();
         return ApiResponse::success(new OrderResource($order));
+    }
+    public function couponCart(Request $request){
+        $data =$request->validate([
+        'couponCode' => 'required|exists:coupons,code',
+        'orderId'=>'required|exists:orders,id'
+        ]);
+        $auth = $request->user();
+        $client = Client::find($auth->client_id);
+        if(!$client){
+           return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
+        }
+        $order = Order::find($data['orderId']);
+        if(!$order){
+          return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
+        }
+            $couponDiscount = 0;
+            if (!empty($data['couponCode'])) {
+                $couponValidation = $this->couponService->validateCoupon(
+                    $data['couponCode'],
+                    $client->id,
+                    $order->price_after_discount
+                );
+
+                if ($couponValidation['valid']) {
+                    $couponDiscount = $couponValidation['discount'];
+                    $this->couponService->applyCoupon(
+                        $couponValidation['coupon'],
+                        $order,
+                        $client->id,
+                        $couponDiscount
+                    );
+                }
+                $priceAfterCoupon = $order->price_after_discount - $couponDiscount;
+                $order->price_after_discount = $priceAfterCoupon;
+                $order->save();
+                return [
+                 'priceBeforCoupon'=>$order->price,
+                 'priceAfterCoupon'=>$order->price_after_discount
+                ];
+            }
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\Coupon\CouponService;
 use App\Helpers\ApiResponse;
+use App\Models\Order\Order;
 class ValidateCouponController extends Controller
 {
     protected $couponService;
@@ -19,9 +20,12 @@ class ValidateCouponController extends Controller
     {
         $data = $request->validate([
             'code' => 'required|string',
-            'order_amount' => 'required|numeric|min:0',
+            'orderId'=>'required|exists:orders,id'
         ]);
-
+         $order = Order::find($data['orderId']);
+        if(!$order){
+          return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
+        }
         $auth = $request->user();
         if (!$auth) {
             return ApiResponse::error("يجب تسجيل الدخول أولاً", 401);
@@ -30,7 +34,7 @@ class ValidateCouponController extends Controller
         $result = $this->couponService->validateCoupon(
             $data['code'],
             $auth->client_id,
-            $data['order_amount']
+            $order->price
         );
 
         if (!$result['valid']) {
