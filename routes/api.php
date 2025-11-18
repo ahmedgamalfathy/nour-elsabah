@@ -90,6 +90,7 @@ Route::prefix('v1/admin')->group(function () {
 Route::prefix('v1/website')->group(function(){
     Route::post('validate-coupon', ValidateCouponController::class) ->middleware('auth:client');;
     Route::post('coupon-cart', [AuthOrderController::class,'couponCart']);
+    Route::post('cash-on-delivery', [AuthOrderController::class,'cashOnDelivery']);
     Route::get('/pages/{slug}', [StaticPageWebController::class, 'show']);
     Route::controller(AuthWebsiteController::class)->group(function () {
         Route::post('register', 'register');

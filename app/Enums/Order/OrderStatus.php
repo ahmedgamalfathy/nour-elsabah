@@ -8,6 +8,8 @@ enum OrderStatus :int{
     case DELIVERED = 5;
     case RETURNED = 6;
     case CANCELED = 4;
+    case CASHONDELIVERY =7;
+    
 
 //canel =4
     public static function values(){

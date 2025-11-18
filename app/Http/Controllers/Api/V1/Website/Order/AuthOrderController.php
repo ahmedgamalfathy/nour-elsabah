@@ -173,4 +173,16 @@ class AuthOrderController extends Controller implements HasMiddleware
                 ];
             }
     }
+    public function cashOnDelivery(Request $request){
+        $data =$request->validate([
+            'orderId'=>'required|exists:orders,id'
+        ]);
+        $order = Order::find($data['orderId']);
+        if(!$order){
+          return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
+        }
+        $order->status = OrderStatus::CASHONDELIVERY->value;
+        $order->save();
+         return ApiResponse::success([],__('crud.updated'));
+    }
 }
