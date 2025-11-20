@@ -63,29 +63,30 @@ class CategoryTwoService {
             }
             $category->path = $path;
         }
-        if($categoryData['parentId'] == null){
-            if($category->parent_id == null){
-                $category->parent_id = null;
-            }else{
-                Category::where('parent_id', $category->id)->delete();
-                $category->parent_id = null;
-            }
-        }else {
-            if($category->parent_id == null ){
-                // Get a default category to move products to
-                $defaultCategory = Category::where('id', '!=', $id)->first();
-                if($defaultCategory) {
-                    // Update the pivot table to point to the default category
-                    $category->products()->updateExistingPivot(
-                        $category->products->pluck('id')->toArray(),
-                        ['category_id' => $defaultCategory->id]
-                    );
-                }
-                // Now we can safely delete child categories
-                Category::where('parent_id', $category->id)->delete();
-            }
-            $category->parent_id = $categoryData['parentId'];
-        }
+        // if($categoryData['parentId'] == null){
+        //     if($category->parent_id == null){
+        //         $category->parent_id = null;
+        //     }else{
+        //         Category::where('parent_id', $category->id)->delete();
+        //         $category->parent_id = null;
+        //     }
+        // }else {
+        //     if($category->parent_id == null ){
+        //         // Get a default category to move products to
+        //         $defaultCategory = Category::where('id', '!=', $id)->first();
+        //         if($defaultCategory) {
+        //             // Update the pivot table to point to the default category
+        //             $category->products()->updateExistingPivot(
+        //                 $category->products->pluck('id')->toArray(),
+        //                 ['category_id' => $defaultCategory->id]
+        //             );
+        //         }
+        //         // Now we can safely delete child categories
+        //         Category::where('parent_id', $category->id)->delete();
+        //     }
+        //     $category->parent_id = $categoryData['parentId'] ?? null;
+        // }
+        $category->parent_id = $categoryData['parentId'] ?? null;
         $category->name = $categoryData['name'];
         $category->is_active = CategoryStatus::from($categoryData['isActive'])->value;
 
