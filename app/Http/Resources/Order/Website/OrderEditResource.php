@@ -26,6 +26,9 @@ class OrderEditResource extends JsonResource
             'status' => $this->status ?? "",
             'price' => $this->price ?? "",
             'discount' => $this->discount ?? "",
+            'pointsEarned' => $this->points_earned,
+            'pointsRedeemed' => $this->points_redeemed,
+            'pointsDiscountAmount' => $this->points_discount_amount,
             'priceAfterDiscount' => $this->price_after_discount ?? "",
             'date' => Carbon::parse($this->created_at)->format('d/m/Y'),
             'items' => OrderItemResource::collection($this->items), // items هنا

@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Api\V1\Dashboard\Order;
 
+use App\Models\Order\Order;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
+use App\Enums\Order\OrderStatus;
 use App\Utils\PaginateCollection;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Services\Order\OrderService;
+use Illuminate\Validation\Rules\Enum;
+use App\Services\Points\PointsService;
 use App\Enums\ResponseCode\HttpStatusCode;
 use App\Http\Resources\Order\OrderResource;
 use Illuminate\Routing\Controllers\Middleware;
@@ -20,9 +24,11 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class OrderController extends Controller implements HasMiddleware
 {
     protected $orderService;
-    public function __construct(OrderService $orderService)
+    protected $pointsService;
+    public function __construct(OrderService $orderService,PointsService $pointsService)
     {
         $this->orderService = $orderService;
+        $this->pointsService = $pointsService;
     }
     public static function middleware(): array
     {
@@ -103,5 +109,38 @@ class OrderController extends Controller implements HasMiddleware
             return ApiResponse::error(__('crud.server_error'),[],HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
 
+    }
+    public function bulkUpdateStatus(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'action' =>[ 'required','integer',new Enum(OrderStatus::class) ],
+                'ids' => 'required|array|min:1',
+                'ids.*' => 'required|integer|exists:orders,id',
+            ]);
+            // تحديث مباشر
+            $orders = Order::whereIn('id', $data['ids'])
+                ->update(['status' => $data['action']]);
+            $updatedCount = count($data['ids']);
+            foreach($data['ids'] as $orderId){
+                $order = Order::find($orderId);
+                if ($order->status == OrderStatus::CONFIRM &&
+                    $order->points_earned == 0) {
+                    $this->pointsService->addPointsForOrder($order);
+                }
+                if ($order->status == OrderStatus::CANCELED &&
+                    $order->points_redeemed > 0) {
+                    $this->pointsService->cancelPointsRedemption($order);
+                }
+            }
+
+            return ApiResponse::success([], __('crud.updated'));
+        } catch (\Throwable $e) {
+            return ApiResponse::error(
+                __('crud.server_error'),
+                $e->getMessage(),
+                HttpStatusCode::INTERNAL_SERVER_ERROR
+            );
+        }
     }
 }

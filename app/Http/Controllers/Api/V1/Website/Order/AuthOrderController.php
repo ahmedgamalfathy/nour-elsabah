@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Enums\Product\LimitedQuantity;
 use App\Services\Coupon\CouponService;
+use App\Services\Points\PointsService;
 use App\Services\Order\OrderItemService;
 use App\Enums\ResponseCode\HttpStatusCode;
 use Illuminate\Routing\Controllers\Middleware;
@@ -24,10 +25,12 @@ class AuthOrderController extends Controller implements HasMiddleware
 {
     public $orderItemService;
     public $couponService;
-    public function __construct(OrderItemService $orderItemService, CouponService $couponService)
+    public $pointsService;
+    public function __construct(OrderItemService $orderItemService, CouponService $couponService , PointsService $pointsService)
     {
         $this->orderItemService = $orderItemService;
         $this->couponService = $couponService;
+        $this->pointsService = $pointsService;
     }
     public static function middleware(): array
     {
@@ -91,11 +94,11 @@ class AuthOrderController extends Controller implements HasMiddleware
             $totalPriceAfterDiscount = $totalPrice - $data['discount'];
         }elseif($order->discount_type == DiscountType::NO_DISCOUNT){
             $totalPriceAfterDiscount = $totalPrice;
-        }   
+        }
         $order->update([
             'price_after_discount' => $totalPriceAfterDiscount,
             'price' => $totalPrice,
-            'total_cost'=>$totalCost,       
+            'total_cost'=>$totalCost,
             'discount_type' => DiscountType::COUPON->value,
         ]);
         DB::commit();
@@ -185,4 +188,98 @@ class AuthOrderController extends Controller implements HasMiddleware
         $order->save();
          return ApiResponse::success([],__('crud.updated'));
     }
+    public function myPoints(Request $request)
+    {
+        try {
+            $auth = $request->user();
+            $client = Client::findOrFail($auth->client_id);
+
+            $availablePoints = $this->pointsService->getAvailablePoints($client);
+            $pointsValue = $this->pointsService->calculatePointsValue($availablePoints);
+            $history = $this->pointsService->getPointsHistory($client);
+
+            return ApiResponse::success([
+                'availablePoints' => $availablePoints,
+                'pointsValue' => $pointsValue,
+                // 'history' => $history,
+            ]);
+        } catch (\Throwable $e) {
+            return ApiResponse::error(__('crud.server_error'), $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+        }
+    }
+     public function cancelPointsRedemption(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'orderId' => 'required|exists:orders,id',
+            ]);
+
+            $auth = $request->user();
+            $client = Client::findOrFail($auth->client_id);
+            $order = Order::findOrFail($data['orderId']);
+
+            if ($order->client_id != $client->id) {
+                return ApiResponse::error('هذا الطلب لا يخصك', [], HttpStatusCode::FORBIDDEN);
+            }
+
+            if ($order->points_redeemed <= 0) {
+                return ApiResponse::error('لم يتم استخدام نقاط في هذا الطلب', [], HttpStatusCode::BAD_REQUEST);
+            }
+
+            $this->pointsService->cancelPointsRedemption($order);
+
+            return ApiResponse::success([
+                'message' => 'تم إلغاء استخدام النقاط بنجاح',
+                'order' => new OrderResource($order->fresh()),
+            ]);
+        } catch (\Throwable $e) {
+            return ApiResponse::error(__('crud.server_error'), $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+        }
+    }
+     public function redeemPoints(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'orderId' => 'required|exists:orders,id',
+                'points' => 'required|integer|min:1',
+            ]);
+
+            $auth = $request->user();
+            $client = Client::findOrFail($auth->client_id);
+            $order = Order::findOrFail($data['orderId']);
+
+            // التحقق من أن الطلب يخص العميل
+            if ($order->client_id != $client->id) {
+                return ApiResponse::error('هذا الطلب لا يخصك', [], HttpStatusCode::FORBIDDEN);
+            }
+
+            // التحقق من حالة الطلب
+            if ($order->status == OrderStatus::CHECKOUT) {
+                return ApiResponse::error('لا يمكن استخدام النقاط لطلب مكتمل', [], HttpStatusCode::BAD_REQUEST);
+            }
+
+            $result = $this->pointsService->redeemPoints($client, $order, $data['points']);
+
+            if (!$result['success']) {
+                return ApiResponse::error($result['message'], [], HttpStatusCode::BAD_REQUEST);
+            }
+
+            return ApiResponse::success([
+                'message' => $result['message'],
+                'pointsRedeemed' => $result['points_redeemed'],
+                'discountAmount' => $result['discount_amount'],
+                'newTotal' => $result['new_total'],
+                'remainingPoints' => $result['remaining_points'],
+                'order' => new OrderResource($order->fresh()),
+            ]);
+        } catch (\Throwable $e) {
+            return ApiResponse::error(__('crud.server_error'), $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+        }
+    }
+    /**
+     * استخدام النقاط في الطلب
+     */
+
+
+
 }

@@ -30,6 +30,9 @@ return new class extends Migration
             $table->decimal('price', 10, 2)->default(0);
             $table->tinyInteger('discount_type')->default(DiscountType::NO_DISCOUNT->value);
             $table->decimal('price_after_discount', 10, 2)->default(0);
+            $table->integer('points_earned')->default(0);
+            $table->integer('points_redeemed')->default(0);
+            $table->decimal('points_discount_amount', 10, 2)->default(0);
             // $this->CreatedUpdatedByRelationship($table);
             $table->timestamps();
         });

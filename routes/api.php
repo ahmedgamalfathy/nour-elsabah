@@ -64,6 +64,7 @@ Route::prefix('v1/admin')->group(function () {
     //force_delete_Client
     Route::post('clients/{id}/restore', [ClientController::class, 'restore']);
     Route::delete('clients/{id}/force', [ClientController::class, 'forceDelete']);
+    Route::post('orders/bulk-update-status', [OrderController::class, 'bulkUpdateStatus']);
     Route::apiResources([
         // "categories" => CategoryController::class,
         // "sub-categories" =>SubCategoryController::class,
@@ -148,7 +149,9 @@ Route::prefix('v1/website')->group(function(){
     Route::get('/auth_read_notification/{id}',[NotificationController::class,'auth_read_notification']);
     Route::DELETE('/auth_delete_notifications',[NotificationController::class,'auth_delete_notifications']);
 
-
+    Route::get('points/my-points', [AuthOrderController::class, 'myPoints']);
+    Route::post('points/redeem', [AuthOrderController::class, 'redeemPoints']);
+    Route::post('points/cancel-redemption', [AuthOrderController::class, 'cancelPointsRedemption']);
 });//website ...
 // Route::match(['GET','POST'],'/payment/callback', [PaymentController::class, 'callBack']);
 Route::match(['GET', 'POST'], '/payment/callback/paypal', [PaymentController::class, 'paypalCallback']);

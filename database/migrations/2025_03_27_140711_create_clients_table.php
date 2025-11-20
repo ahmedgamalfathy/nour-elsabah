@@ -19,6 +19,7 @@ return new class extends Migration
     {
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
+              $table->integer('points')->default(0);
             $table->string('name')->nullable();
             $table->tinyInteger('type')->default(ClientType::VISITOR->value);
             $table->text('note')->nullable();

@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Order\Order;
 use App\Models\Product\Category;
+use App\Observers\OrderObserver;
 use App\Observers\CategoryObserver;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
         Category::observe(CategoryObserver::class);
+        Order::observe(OrderObserver::class);
 
     }
 }
