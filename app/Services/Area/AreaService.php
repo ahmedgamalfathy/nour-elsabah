@@ -27,7 +27,7 @@ class AreaService{
       //name , location , address , status
         $area = Area::create([
             'name' => $data['name'],
-            'area_id'=> $data['areaId'],
+            'area_id'=> $data['areaId']??null,
             'price'=> $data['price']
         ]);
         return $area;

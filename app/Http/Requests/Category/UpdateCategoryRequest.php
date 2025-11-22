@@ -34,9 +34,9 @@ class UpdateCategoryRequest extends FormRequest
                 'required',
                 Rule::unique('categories', 'name')
                     ->ignore($this->route('category')) // Ignore the current category
-                    ->where(function ($query) {
-                        return $query->whereNull('parent_id'); // Only check uniqueness among main categories
-                    }),
+                    // ->where(function ($query) {
+                    //     return $query->whereNull('parent_id'); // Only check uniqueness among main categories
+                    // }),
             ],
             'isActive' => ['required', new Enum(CategoryStatus::class)],
             'path' => 'nullable|image|mimes:jpeg,jpg,png,gif,svg|max:5120',

@@ -34,7 +34,9 @@ class AreaController extends Controller
             'areaId' => 'nullable|integer|exists:areas,id',
             'price' => 'required|numeric|min:1',
         ]);
-
+       if (!isset($data['areaId'])) {
+           $data['areaId'] = null;
+       }
         $area = $this->areaService->createArea($data);
         return ApiResponse::success([], 'Area created successfully');
     }
@@ -65,7 +67,9 @@ class AreaController extends Controller
             'areaId' => 'nullable|integer|exists:areas,id',
             'price' => 'required|numeric|min:1',
         ]);
-
+       if (!isset($data['areaId'])) {
+           $data['areaId'] = null;
+       }
         $area = $this->areaService->updateArea($id, $data);
         return ApiResponse::success([],"Area updated successfully");
     }
