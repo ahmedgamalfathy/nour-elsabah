@@ -115,6 +115,7 @@ Route::prefix('v1/website')->group(function(){
     Route::apiResource('categoryWebsite',CategoryWebsite::class)->only(['index']);
     Route::get('latest-products',[ProductWebsiteController::class ,'latestProducts']);
     Route::get('discount-products',[ProductWebsiteController::class ,'discountProducts']);
+    Route::get('shipping-free-products',[ProductWebsiteController::class ,'ShippingFreeProducts']);
     Route::apiResource('products',ProductWebsiteController::class)->only(['index','show'])->names([
         'index' => 'productsWeb.index',
         'show'=>'productsWeb.show'

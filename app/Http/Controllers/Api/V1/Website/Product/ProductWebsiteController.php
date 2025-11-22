@@ -27,6 +27,10 @@ class ProductWebsiteController  extends Controller
     {
         $this->productService =$productService;
     }
+    public function ShippingFreeProducts(){
+        $products = Product::where('status',1)->where('is_free_shipping',1)->orderBy('created_at','desc')->limit(15)->get();
+        return ApiResponse::success(AllProductResource::collection($products));
+    }
     public function discountProducts(){
         $products = Product::where('status',1)->whereNotNull('crossed_price')->orderBy('created_at','desc')->limit(10)->get();
         return ApiResponse::success(AllProductResource::collection($products));
