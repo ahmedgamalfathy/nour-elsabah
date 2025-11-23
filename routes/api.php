@@ -2,6 +2,7 @@
 
 use App\Models\Order\OrderItem;
 use Illuminate\Support\Facades\DB;
+use App\Models\SubSlider\SubSlider;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Select\SelectController;
 use App\Http\Controllers\Api\V1\Dashboard\Auth\AuthController;
@@ -15,18 +16,19 @@ use App\Http\Controllers\Api\V1\Dashboard\Slider\SliderController;
 use App\Http\Controllers\Api\V1\Website\Order\AuthOrderController;
 use App\Http\Controllers\Api\V1\Website\Payment\PaymentController;
 use App\Http\Controllers\Api\V1\Website\Auth\AuthWebsiteController;
-use App\Http\Controllers\Api\V1\Dashboard\Product\ProductController;
 // use App\Http\Controllers\Api\V1\Dashboard\Category\CategoryController;
+use App\Http\Controllers\Api\V1\Dashboard\Product\ProductController;
 use App\Http\Controllers\Api\V1\Website\Order\ClientOrderController;
 use App\Http\Controllers\Api\V1\Dashboard\User\UserProfileController;
 use App\Http\Controllers\Api\V1\Website\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\V1\Website\Order\AuthOrderItemController;
 use App\Http\Controllers\Api\V1\Website\Order\CheckQuantityController;
 use App\Http\Controllers\Api\V1\Dashboard\Client\ClientEmailController;
-use App\Http\Controllers\Api\V1\Dashboard\Client\ClientPhoneController;
 // use App\Http\Controllers\Api\V1\Dashboard\Category\SubCategoryController;
+use App\Http\Controllers\Api\V1\Dashboard\Client\ClientPhoneController;
 use App\Http\Controllers\Api\V1\Website\Client\ClientWebsiteController;
 use App\Http\Controllers\Api\V1\Dashboard\Client\ClientAdressController;
+use App\Http\Controllers\Api\V1\Dashboard\SubSlider\SubSliderController;
 use App\Http\Controllers\Api\V1\Dashboard\User\ChangePasswordController;
 use App\Http\Controllers\Api\V1\Website\Coupon\ValidateCouponController;
 use App\Http\Controllers\Api\V1\Website\Order\OrderItemWebsiteController;
@@ -40,6 +42,7 @@ use App\Http\Controllers\Api\V1\Dashboard\MainCategory\CategoryTwoController;
 use App\Http\Controllers\Api\V1\Website\Auth\Profile\ClientProfileController;
 use App\Http\Controllers\Api\V1\Website\Client\ClientAdressWebsiteController;
 use App\Http\Controllers\Api\V1\Website\Product\BestSellingProductController;
+use App\Http\Controllers\Api\V1\Website\SubSlider\SubSliderWebsiteController;
 use App\Http\Controllers\Api\V1\Dashboard\Client\ClientCheckDefaultController;
 use App\Http\Controllers\Api\V1\Dashboard\ProductMedia\ProductMediaController;
 use App\Http\Controllers\Api\V1\Website\Order\OrderController as OrderWebsite;
@@ -47,6 +50,7 @@ use App\Http\Controllers\Api\V1\Website\Slider\SliderController as SliderWebsite
 use App\Http\Controllers\Api\V1\Dashboard\Notification\SendNotificationController;
 use App\Http\Controllers\Api\V1\Website\Category\CategoryController as CategoryWebsite;
 use App\Http\Controllers\Api\V1\Website\Auth\Profile\ChangePasswordController as ChangePasswordWebsite ;
+
 //SendCodeController
 Route::prefix('v1/admin')->group(function () {
     Route::apiResource('coupons', CouponController::class);
@@ -86,7 +90,8 @@ Route::prefix('v1/admin')->group(function () {
     Route::prefix('selects')->group(function(){
         Route::get('', [SelectController::class, 'getSelects']);
       });
-
+    Route::apiResource('sub-sliders', SubSliderController::class);
+    Route::patch('sub-sliders/{slider}/toggle-active', [SubSliderController::class, 'toggleActive']);
 });//admin
 Route::prefix('v1/website')->group(function(){
     Route::post('validate-coupon', ValidateCouponController::class) ->middleware('auth:client');;
@@ -153,6 +158,8 @@ Route::prefix('v1/website')->group(function(){
     Route::get('points/my-points', [AuthOrderController::class, 'myPoints']);
     Route::post('points/redeem', [AuthOrderController::class, 'redeemPoints']);
     Route::post('points/cancel-redemption', [AuthOrderController::class, 'cancelPointsRedemption']);
+
+    Route::get('sub-SliderWebsite',[SubSliderWebsiteController::class ,'subSliderWebsite']);
 });//website ...
 // Route::match(['GET','POST'],'/payment/callback', [PaymentController::class, 'callBack']);
 Route::match(['GET', 'POST'], '/payment/callback/paypal', [PaymentController::class, 'paypalCallback']);
