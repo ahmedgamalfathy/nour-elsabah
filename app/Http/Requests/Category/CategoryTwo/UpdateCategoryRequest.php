@@ -33,7 +33,7 @@ class UpdateCategoryRequest extends FormRequest
             'name' => [
                 'required',
                 Rule::unique('categories', 'name')
-                ->ignore($this->route('categories')),
+                ->ignore($this->route('category')),
             ],
             // 'parentId' => 'nullable',
             'isActive' => ['required', new Enum(CategoryStatus::class)],

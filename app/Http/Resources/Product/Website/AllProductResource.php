@@ -26,6 +26,7 @@ class AllProductResource extends JsonResource
             : url('storage/ProductMedia/default-product.jpg')),
             'price' => $this->price,
             'crossedPrice'=>$this->crossed_price??0,
+            'isFreeShipping'=>$this->is_free_shipping,
             'status' => $this->status,
             'description' => $this->description,
         ];
