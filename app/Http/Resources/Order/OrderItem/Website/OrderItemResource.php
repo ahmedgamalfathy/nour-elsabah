@@ -27,6 +27,8 @@ class OrderItemResource extends JsonResource
             'product' => [
                 'productId' => $this->product_id,
                 'name' => $this->product->name,
+                'isShippingFree' => $this->product->is_shipping_free??0,
+                'crossedPrice' => $this->product->crossed_price,
                 // 'path'=> ProductMediaResouce::collection($this->product->productMedia) ,
                 'path'=>
                 $this->product->firstProductMedia

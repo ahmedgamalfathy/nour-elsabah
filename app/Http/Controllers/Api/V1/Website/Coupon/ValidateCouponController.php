@@ -19,7 +19,7 @@ class ValidateCouponController extends Controller
     public function __invoke(Request $request)
     {
         $data = $request->validate([
-            'code' => 'required|string',
+            'code' =>[ 'required','string','exists:coupons,code'],
             'orderId'=>'required|exists:orders,id'
         ]);
          $order = Order::find($data['orderId']);
@@ -45,6 +45,8 @@ class ValidateCouponController extends Controller
             'code' => $result['coupon']->code,
             'type' => $result['coupon']->type,
             'discount' => $result['discount'],
+            'priceAfterDiscount' => max(0, $order->price_after_discount - $result['discount']),
+            'priceBeforeDiscount' => $order->price_after_discount,
             'message' => $result['message']
         ]);
     }

@@ -24,9 +24,9 @@ class PointsSetting extends Model
         return self::firstOrCreate(
             ['id' => 1],
             [
-                'points_per_currency' => 1,
-                'currency_per_point' => 1,
-                'min_points_to_redeem' => 100,
+                'points_per_currency' => 1.00,
+                'currency_per_point' => 0.01,
+                'min_points_to_redeem' => 100.00,
                 'is_active' => true,
             ]
         );

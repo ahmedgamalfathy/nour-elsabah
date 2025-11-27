@@ -24,8 +24,8 @@ class OrderResource extends JsonResource
             'priceAfterDiscount' => $this->price_after_discount,
             'products' =>count($this->items),
             'date' =>Carbon::parse($this->created_at)->format('Y-m-d'),
-            'pointsEarned' => $this->points_earned,
-            'pointsRedeemed' => $this->points_redeemed,
+            // 'pointsEarned' => $this->points_earned,
+            // 'pointsRedeemed' => $this->points_redeemed?($this->points_redeemed/100):0,
             'pointsDiscountAmount' => $this->points_discount_amount,
             // 'orderItems'=> OrderItemResource::collection($this->items),
         ];
