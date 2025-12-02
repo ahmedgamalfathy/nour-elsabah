@@ -270,6 +270,7 @@ class AuthOrderController extends Controller implements HasMiddleware
                 'discountAmount' => $result['discount_amount'],
                 'newTotal' => $result['new_total'],
                 'remainingPoints' => $result['remaining_points'],
+                'redeemedValue' => $result['remaining_points'] > 0 ? $this->pointsService->calculatePointsValue($result['remaining_points']) : 0,
                 'order' => new OrderResource($order->fresh()),
             ]);
         } catch (\Throwable $e) {
