@@ -24,6 +24,8 @@ class AllUserResource extends JsonResource
             'isActive' => $this->is_active,
             'avatar' => $this->avatar,
             'roleName' => $this->roles->first()->name,
+            'address' => $this->address??"",
+            'phone' => $this->phone??"",
         ];
     }
 }
