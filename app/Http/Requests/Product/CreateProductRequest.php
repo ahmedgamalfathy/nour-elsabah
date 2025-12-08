@@ -38,12 +38,12 @@ class CreateProductRequest extends FormRequest
             "categoryId" => [ "nullable","numeric",'exists:categories,id'],
             // "subCategoryId" => [ "nullable","numeric",'exists:categories,id'],
             "specifications"=>["nullable","array"],
-            'cost' => ['nullable'],
+            'cost' => ['nullable',"numeric"],
             "isLimitedQuantity" => ["required", new Enum(LimitedQuantity::class)],
             'quantity' => ['required_if:isLimitedQuantity,' . LimitedQuantity::LIMITED->value],
             'unitType' => ['required', new Enum(UnitType::class)],
-            'isPromotion' => ['nullable','in:0,1'],
-            'isFreeShipping' => ['nullable','in:0,1'],
+            'isPromotion' => ['required','in:0,1'],
+            'isFreeShipping' => ['required','in:0,1'],
             'crossedPrice' => ['nullable','numeric'],
               //crossed_price, is_promotion, is_free_shipping, unit_type
         ];

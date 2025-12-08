@@ -2,14 +2,16 @@
 namespace App\Enums\Order;
 enum OrderStatus :int{
     case DRAFT = 0;
-    case IN_CART= 3;
+    case IN_CART= 3;//السلة المتروكة
+    case WATING =8;//قيد الانتظار
+    case INPROGRESS = 9;//قيد التجهيز
     case CHECKOUT = 2;
-    case CONFIRM = 1;
-    case DELIVERED = 5;
-    case RETURNED = 6;
-    case CANCELED = 4;
-    case CASHONDELIVERY =7;
-    
+    case CONFIRM = 1;//تاكيد الطلب
+    case DELIVERED = 5;// تم التوصيل
+    case RETURNED = 6;//المرتجعات
+    case CANCELED = 4;//طلبات مرفوضة
+    case CASHONDELIVERY =7;//الدفع عند الاستلام
+
 
 //canel =4
     public static function values(){

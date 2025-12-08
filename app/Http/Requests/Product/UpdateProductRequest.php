@@ -38,15 +38,14 @@ class UpdateProductRequest extends FormRequest
             "status" => ["required", new Enum(ProductStatus::class)],
             "categoryId" => [ "nullable","numeric",'exists:categories,id'],
             // "subCategoryId" => [ "nullable","numeric",'exists:categories,id'],
-            'cost' => ['nullable'],
+            'cost' => ['nullable','numeric'],
             "specifications"=>["nullable","array"],
             "isLimitedQuantity" => ["required", new Enum(LimitedQuantity::class)],
             'quantity' => ['required_if:isLimitedQuantity,' . LimitedQuantity::LIMITED->value],
             'unitType' => ['required', new Enum(UnitType::class)],
-            'isPromotion' => ['nullable','in:0,1'],
-            'isFreeShipping' => ['nullable','in:0,1'],
+            'isPromotion' => ['required','in:0,1'],
+            'isFreeShipping' => ['required','in:0,1'],
             'crossedPrice' => ['nullable','numeric'],
-
         ];
     }
 

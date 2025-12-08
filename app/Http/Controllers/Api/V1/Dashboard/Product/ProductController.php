@@ -91,7 +91,7 @@ class ProductController extends Controller implements HasMiddleware
             DB::commit();
             return ApiResponse::success([], __('crud.updated'));
         }catch (Throwable $th) {
-            return ApiResponse::error(__('crud.server_error'),[],HttpStatusCode::INTERNAL_SERVER_ERROR);
+            return ApiResponse::error(__('crud.server_error'),$th->getMessage(),HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
 
     }

@@ -32,7 +32,7 @@ class ProductWebsiteController  extends Controller
         return ApiResponse::success(AllProductResource::collection($products));
     }
     public function discountProducts(){
-        $products = Product::where('status',1)->whereNotNull('crossed_price')->orderBy('created_at','desc')->limit(10)->get();
+        $products = Product::where('status',1)->where('crossed_price','!=',0)->orderBy('created_at','desc')->limit(10)->get();
         return ApiResponse::success(AllProductResource::collection($products));
     }
     public function latestProducts()

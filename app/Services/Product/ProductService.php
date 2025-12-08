@@ -81,7 +81,7 @@ class ProductService
             "specifications"=>$data["specifications"]??null,
             'is_limited_quantity'=>LimitedQuantity::from($data['isLimitedQuantity'])->value
                 //crossed_price, is_promotion, is_free_shipping, unit_type
-            ,'crossed_price'=>$data['crossedPrice']??null,
+            ,'crossed_price'=>$data['crossedPrice']??0,
             'is_promotion'=>$data['isPromotion']??0,
             'is_free_shipping'=>$data['isFreeShipping']??0,
             'unit_type'=>$data['unitType']
