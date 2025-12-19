@@ -13,7 +13,7 @@ class AllOrderResource  extends JsonResource
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
-    {
+    {//"orderId ,orderNumber ,clientName ,status ,price totalOrderCost priceAfterDiscount totalOrderItems date"
         return [
             'orderId' => $this->id,
             'orderNumber' => $this->number,

@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1\Website\Order;
 
+use Throwable;
 use App\Models\Order\Order;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use App\Models\Client\Client;
 use App\Enums\Order\OrderStatus;
 use App\Enums\Order\DiscountType;
+use App\Events\CreatedOrderEvent;
 use function Laravel\Prompts\form;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -177,16 +179,25 @@ class AuthOrderController extends Controller implements HasMiddleware
             }
     }
     public function cashOnDelivery(Request $request){
-        $data =$request->validate([
-            'orderId'=>'required|exists:orders,id'
-        ]);
-        $order = Order::find($data['orderId']);
-        if(!$order){
-          return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
+        try{
+            DB::beginTransaction();
+            $data =$request->validate([
+                'orderId'=>'required|exists:orders,id'
+            ]);
+            $order = Order::find($data['orderId']);
+            if(!$order){
+            return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
+            }
+            $order->status = OrderStatus::CASHONDELIVERY->value;
+            $order->save();
+            broadcast(new CreatedOrderEvent($order));
+            DB::commit();
+            return ApiResponse::success([],__('crud.updated'));
+        } catch (Throwable $th) {
+            DB::rollBack( );
+            return ApiResponse::error(__('crud.server_error'),$th->getMessage(),HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
-        $order->status = OrderStatus::CASHONDELIVERY->value;
-        $order->save();
-         return ApiResponse::success([],__('crud.updated'));
+
     }
     public function myPoints(Request $request)
     {

@@ -86,6 +86,7 @@ Route::prefix('v1/admin')->group(function () {
     Route::apiResource('users', UserController::class);
     Route::apiSingleton('profile', UserProfileController::class);
     Route::put('profile/change-password', ChangePasswordController::class);
+    
     Route::get('/stats',StatsController::class);
     Route::prefix('selects')->group(function(){
         Route::get('', [SelectController::class, 'getSelects']);
@@ -147,7 +148,6 @@ Route::prefix('v1/website')->group(function(){
         Route::put('items/{itemId}', [OrderItemWebsiteController::class, 'updateItem']);
         Route::delete('items/{itemId}', [OrderItemWebsiteController::class, 'deleteItem']);
     });
-
     Route::post('/payment/process', [PaymentController::class, 'paymentProcess']);
     Route::get('/notifications',[NotificationController::class,'notifications']);
     Route::get('/auth_unread_notifications',[NotificationController::class,'auth_unread_notifications']);
