@@ -184,7 +184,7 @@ class AuthOrderController extends Controller implements HasMiddleware
             $data =$request->validate([
                 'orderId'=>'required|exists:orders,id'
             ]);
-            $order = Order::find($data['orderId']);
+            $order = Order::find($data['orderId']);//
             if(!$order){
             return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
             }
