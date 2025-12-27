@@ -18,6 +18,8 @@ class AllOrderResource  extends JsonResource
             'orderId' => $this->id,
             'orderNumber' => $this->number,
             'clientName' => $this->client?->name??'',
+            'clientAddress'=> $this->clientAddress?->address??'',
+            'clientPhone'=> $this->clientPhone?->phone??'',
             'status' => $this->status,
             'discountType' => $this->discount_type,
             'discount' => $this->discount,

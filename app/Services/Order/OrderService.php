@@ -24,7 +24,7 @@ class OrderService
             AllowedFilter::exact('clientId', 'client_id'),
             'status',
         ])
-
+        ->orderByDesc('created_at')
         ->get();
         return $orders;
     }
