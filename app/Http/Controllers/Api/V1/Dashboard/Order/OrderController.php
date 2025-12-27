@@ -45,7 +45,7 @@ class OrderController extends Controller implements HasMiddleware
     public function index(Request $request)
     {
         $orders= $this->orderService->allOrders();
-        return ApiResponse::success(new AllOrderCollection(PaginateCollection::paginate($orders,$request->pageSize?$request->pageSize:10)));
+        return ApiResponse::success(new AllOrderCollection(PaginateCollection::paginate($orders,$request->pageSize?$request->pageSize:30)));
     }
 
     public function show($id)
