@@ -29,7 +29,7 @@ class OrderService
         return $orders;
     }
     public function editOrder(int $id){
-        $order= Order::with(['items'])->find($id);
+        $order= Order::with(['items','client','clientAddress','clientPhone','clientEmail'])->find($id);
         if(!$order){
             throw new ModelNotFoundException();
         }
