@@ -18,7 +18,12 @@ class AllOrderResource  extends JsonResource
             'orderId' => $this->id,
             'orderNumber' => $this->number,
             'clientName' => $this->client?->name??'',
-            'clientAddress'=> $this->clientAddress?->address??'',
+            'clientAddress'=> [//address,street_number,city,region,is_main
+                'address' => $this->clientAddress?->address??'',
+                'street_number' => $this->clientAddress?->street_number??'',
+                'city' => $this->clientAddress?->city??'',
+                'region' => $this->clientAddress?->region??'',
+            ],
             'clientPhone'=> $this->clientPhone?->phone??'',
             'status' => $this->status,
             'discountType' => $this->discount_type,
