@@ -24,7 +24,12 @@ class OrderResource extends JsonResource
             'clientEmailId' => $this->client_email_id??'',
             'clientAddressId' => $this->client_address_id??'',
             'clientName' => $this->client?->name??'',
-            'clientAddress'=> $this->clientAddress?->address??'',
+            'clientAddress'=> [//address,street_number,city,region,is_main
+                'address' => $this->clientAddress?->address??'',
+                'street_number' => $this->clientAddress?->street_number??'',
+                'city' => $this->clientAddress?->city??'',
+                'region' => $this->clientAddress?->region??'',
+            ],
             'clientPhone'=> $this->clientPhone?->phone??'',
             'clientEmail'=> $this->clientEmail?->email??'',
             'status' => $this->status,
