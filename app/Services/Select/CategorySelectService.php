@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Services\Select;
-
+use App\Enums\Product\CategoryStatus;
 use App\Models\Product\Category;
 use Illuminate\Support\Facades\DB;
 
@@ -10,6 +10,10 @@ class CategorySelectService
     public function getCategories()
     {
         return Category::whereNull('parent_id')->get(['id as value','name as label']);
+    }
+        public function getActiveCategories()
+    {
+        return Category::whereNull('parent_id')->where('is_active',CategoryStatus::ACTIVE)->get(['id as value','name as label']);
     }
     public function getSubCategories(int $parentId)
     {

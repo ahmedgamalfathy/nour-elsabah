@@ -61,6 +61,7 @@ class SelectService
             'clientPhones' => ['getClientPhones', ClientSelectService::class],
             'clientAddress'=>['getClientAddress',ClientSelectService::class],
             'categories'=>['getCategories',CategorySelectService::class],
+            'activeCategories'=>['getActiveCategories',CategorySelectService::class],
             'subCategories'=>['getSubCategories',CategorySelectService::class],
             'allsubcategory'=>['getallsubcategory',CategorySelectService::class],
             'roles' => ['getAllRoles', RoleSelectService::class],
