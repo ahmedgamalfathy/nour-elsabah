@@ -173,8 +173,9 @@ class AuthOrderController extends Controller implements HasMiddleware
                 $order->price_after_discount = $priceAfterCoupon;
                 $order->save();
                 return [
-                 'priceBeforCoupon'=>$order->price,
-                 'priceAfterCoupon'=>$order->price_after_discount
+                 'valueCoupon'=>$order->coupon_discount,
+                 'priceAfterCoupon'=>$order->price_after_discount,
+                 'priceAfterDiscount'=>$order->price_after_discount
                 ];
             }
     }
