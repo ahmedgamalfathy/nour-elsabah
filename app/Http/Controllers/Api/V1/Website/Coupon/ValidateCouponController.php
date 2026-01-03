@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1\Website\Coupon;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Services\Coupon\CouponService;
-use App\Helpers\ApiResponse;
 use App\Models\Order\Order;
+use App\Helpers\ApiResponse;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Services\Coupon\CouponService;
+use App\Enums\ResponseCode\HttpStatusCode;
+
 class ValidateCouponController extends Controller
 {
     protected $couponService;
@@ -34,7 +36,7 @@ class ValidateCouponController extends Controller
         $result = $this->couponService->validateCoupon(
             $data['code'],
             $auth->client_id,
-            $order->price
+            $order->price_after_discount
         );
 
         if (!$result['valid']) {
