@@ -25,7 +25,8 @@ class DatabaseSeeder extends Seeder
             ProductMediaSeeder::class,
             ClientSeeder::class,
             OrderSeeder::class,
-            StaticPageSeeder::class
+            StaticPageSeeder::class,
+            SettingsSeeder::class, // Settings Seeder
         ]);
 
     }

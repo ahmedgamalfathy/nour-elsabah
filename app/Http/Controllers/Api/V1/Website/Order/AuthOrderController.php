@@ -181,6 +181,11 @@ class AuthOrderController extends Controller implements HasMiddleware
     }
     public function cashOnDelivery(Request $request){
         try{
+            // Check if Cash on Delivery is enabled
+            if (!\App\Models\Setting\Setting::get('payment.cash_on_delivery.enabled', true)) {
+                return ApiResponse::error('الدفع عند الاستلام غير متاح حالياً', [], HttpStatusCode::SERVICE_UNAVAILABLE);
+            }
+
             DB::beginTransaction();
             $data =$request->validate([
                 'orderId'=>'required|exists:orders,id'

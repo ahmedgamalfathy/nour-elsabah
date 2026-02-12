@@ -37,6 +37,11 @@ class StripePaymentService extends BasePaymentService implements PaymentGatewayI
 
     public function sendPayment(Request $request)
     {
+        // Check if Stripe is enabled
+        if (!\App\Models\Setting\Setting::get('payment.stripe.enabled', true)) {
+            return ApiResponse::error('بوابة الدفع Stripe غير متاحة حالياً', [], HttpStatusCode::SERVICE_UNAVAILABLE);
+        }
+
         $orderId = $request->input('orderId');
         $order = Order::find($orderId);
         if(!$order){

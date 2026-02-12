@@ -93,6 +93,15 @@ Route::prefix('v1/admin')->group(function () {
       });
     Route::apiResource('sub-sliders', SubSliderController::class);
     Route::patch('sub-sliders/{slider}/toggle-active', [SubSliderController::class, 'toggleActive']);
+    
+    // Settings Routes
+    Route::prefix('settings')->group(function(){
+        Route::get('', [\App\Http\Controllers\Api\V1\Dashboard\Setting\SettingController::class, 'index']);
+        Route::get('{id}', [\App\Http\Controllers\Api\V1\Dashboard\Setting\SettingController::class, 'show']);
+        Route::put('{id}', [\App\Http\Controllers\Api\V1\Dashboard\Setting\SettingController::class, 'update']);
+        Route::post('bulk-update', [\App\Http\Controllers\Api\V1\Dashboard\Setting\SettingController::class, 'bulkUpdate']);
+        Route::get('payment/gateways', [\App\Http\Controllers\Api\V1\Dashboard\Setting\SettingController::class, 'getPaymentGateways']);
+    });
 });//admin
 Route::prefix('v1/website')->group(function(){
     Route::post('validate-coupon', ValidateCouponController::class) ->middleware('auth:client');;
@@ -160,6 +169,16 @@ Route::prefix('v1/website')->group(function(){
     Route::post('points/cancel-redemption', [AuthOrderController::class, 'cancelPointsRedemption']);
 
     Route::get('sub-SliderWebsite',[SubSliderWebsiteController::class ,'subSliderWebsite']);
+    
+    // Get available payment gateways for website
+    Route::get('payment/available-gateways', function() {
+        $gateways = [
+            'paypal' => \App\Models\Setting\Setting::get('payment.paypal.enabled', true),
+            'stripe' => \App\Models\Setting\Setting::get('payment.stripe.enabled', true),
+            'cash_on_delivery' => \App\Models\Setting\Setting::get('payment.cash_on_delivery.enabled', true),
+        ];
+        return \App\Helpers\ApiResponse::success(array_filter($gateways));
+    });
 });//website ...
 // Route::match(['GET','POST'],'/payment/callback', [PaymentController::class, 'callBack']);
 Route::match(['GET', 'POST'], '/payment/callback/paypal', [PaymentController::class, 'paypalCallback']);

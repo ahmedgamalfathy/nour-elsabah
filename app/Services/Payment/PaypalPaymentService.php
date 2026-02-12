@@ -36,6 +36,11 @@ class PaypalPaymentService extends BasePaymentService implements PaymentGatewayI
 
     public function sendPayment(Request $request): array|JsonResponse
     {
+        // Check if PayPal is enabled
+        if (!\App\Models\Setting\Setting::get('payment.paypal.enabled', true)) {
+            return ApiResponse::error('بوابة الدفع PayPal غير متاحة حالياً', [], HttpStatusCode::SERVICE_UNAVAILABLE);
+        }
+
         $orderId = $request->input('orderId');
         $order = Order::find($orderId);
         if(!$order) {
