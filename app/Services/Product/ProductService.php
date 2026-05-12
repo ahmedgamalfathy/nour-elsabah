@@ -32,32 +32,37 @@ class ProductService
         ->orderBy('created_at', 'desc')
         ->get();
     }
-    public function createProduct(array $data){
-        // dd($data['specifications']);
-        $product= Product::create([
-            'name'=>$data['name'],
-            'price'=>$data['price'],
-            'status'=>$data['status'],
-            'description'=>$data['description']??null,
-            'category_id'=>$data['categoryId']??null,
-            'sub_category_id'=>$data['subCategoryId']??null,
-            'quantity'=>$data['quantity']??0,
-            'cost'=>$data['cost']??0,
-            'specifications'=>$data['specifications']??null,
-            'is_limited_quantity'=>LimitedQuantity::from($data['isLimitedQuantity'])->value
-              //crossed_price, is_promotion, is_free_shipping, unit_type
-            ,'crossed_price'=>$data['crossedPrice']??null,
-            'is_promotion'=>$data['isPromotion']??0,
-            'is_free_shipping'=>$data['isFreeShipping']??0,
-            'unit_type'=>$data['unitType']
+    public function createProduct(array $data): Product
+    {
+        $product = Product::create([
+            'name'                => $data['name'],
+            // price stores the unit price — total = price * qty at order time
+            'price'               => $data['price'],
+            'status'              => $data['status'],
+            'description'         => $data['description'] ?? null,
+            'category_id'         => $data['categoryId'] ?? null,
+            'sub_category_id'     => $data['subCategoryId'] ?? null,
+            'quantity'            => $data['quantity'] ?? 0,
+            'cost'                => $data['cost'] ?? 0,
+            'specifications'      => $data['specifications'] ?? null,
+            'is_limited_quantity' => LimitedQuantity::from($data['isLimitedQuantity'])->value,
+            'crossed_price'       => $data['crossedPrice'] ?? null,
+            'is_promotion'        => $data['isPromotion'] ?? 0,
+            'is_free_shipping'    => $data['isFreeShipping'] ?? 0,
+            'unit_type'           => $data['unitType'],
+            // Unit fields — fall back to piece defaults (step=1, min=1)
+            'unit_id'             => $data['unitId'] ?? null,
+            'quantity_step'       => $data['quantityStep'] ?? 1.000,
+            'min_quantity'        => $data['minQuantity'] ?? 1.000,
         ]);
 
-        if (isset($data['productMedia']) && is_array($data['productMedia']) && count($data['productMedia']) > 0) {
-            foreach($data['productMedia'] as $media){
-                $media['productId']=$product->id;
+        if (! empty($data['productMedia']) && is_array($data['productMedia'])) {
+            foreach ($data['productMedia'] as $media) {
+                $media['productId'] = $product->id;
                 $this->productMediaService->createProductMedia($media);
             }
-      }
+        }
+
         return $product;
     }
     public function editProduct(int $id){
@@ -67,25 +72,32 @@ class ProductService
         }
         return $product;
     }
-    public function updateProduct(int $id,array $data){
-        $product= Product::find($id);
+    public function updateProduct(int $id, array $data): Product
+    {
+        $product = Product::findOrFail($id);
+
         $product->update([
-            'name'=>$data['name'],
-            'price'=>$data['price'],
-            'status'=> $data['status'],
-            'description'=>$data['description']??null,
-            'category_id'=>$data['categoryId']??null,
-            'sub_category_id'=>$data['subCategoryId']??null,
-            'quantity'=>$data['quantity']??0,
-            'cost'=>$data['cost']??0,
-            "specifications"=>$data["specifications"]??null,
-            'is_limited_quantity'=>LimitedQuantity::from($data['isLimitedQuantity'])->value
-                //crossed_price, is_promotion, is_free_shipping, unit_type
-            ,'crossed_price'=>$data['crossedPrice']??0,
-            'is_promotion'=>$data['isPromotion']??0,
-            'is_free_shipping'=>$data['isFreeShipping']??0,
-            'unit_type'=>$data['unitType']
+            'name'                => $data['name'],
+            // price stores the unit price — total = price * qty at order time
+            'price'               => $data['price'],
+            'status'              => $data['status'],
+            'description'         => $data['description'] ?? null,
+            'category_id'         => $data['categoryId'] ?? null,
+            'sub_category_id'     => $data['subCategoryId'] ?? null,
+            'quantity'            => $data['quantity'] ?? 0,
+            'cost'                => $data['cost'] ?? 0,
+            'specifications'      => $data['specifications'] ?? null,
+            'is_limited_quantity' => LimitedQuantity::from($data['isLimitedQuantity'])->value,
+            'crossed_price'       => $data['crossedPrice'] ?? 0,
+            'is_promotion'        => $data['isPromotion'] ?? 0,
+            'is_free_shipping'    => $data['isFreeShipping'] ?? 0,
+            'unit_type'           => $data['unitType'],
+            // Unit fields — fall back to piece defaults (step=1, min=1)
+            'unit_id'             => $data['unitId'] ?? $product->unit_id,
+            'quantity_step'       => $data['quantityStep'] ?? $product->quantity_step,
+            'min_quantity'        => $data['minQuantity'] ?? $product->min_quantity,
         ]);
+
         return $product;
     }
     public function deleteProduct(int $id){

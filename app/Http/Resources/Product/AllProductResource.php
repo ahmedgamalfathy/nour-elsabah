@@ -29,6 +29,13 @@ class AllProductResource extends JsonResource
             'status' => $this->status,
             'isLimitedQuantity' => $this->is_limited_quantity,
             'quantity' => $this->quantity,
+            'minQuantity' => $this->min_quantity??"",
+            'quantityStep' => $this->quantity_step??"",
+            'unit'=>[
+                "id"=>$this->unit->id?? "",
+                "name"=>$this->unit->name?? "",
+                "value"=>$this->unit->step?? "",
+            ],
             "categoryId" => $this->category_id??"",
             "subCategoryId"=> $this->sub_category_id??"",
             'description' => $this->description,

@@ -1,47 +1,69 @@
 <?php
+
 namespace App\Services\Order;
 
 use App\Models\Order\OrderItem;
 use App\Models\Product\Product;
+use App\Traits\ValidatesOrderQuantity;
 
 class OrderItemService
 {
+    use ValidatesOrderQuantity;
+
     public function allOrderItems()
     {
-        $orderItems = OrderItem::get();
-        return $orderItems;
+        return OrderItem::get();
     }
 
-    public function editOrderItem($id)
+    public function editOrderItem(int $id): OrderItem
     {
-        $orderItem = OrderItem::with(['order', 'product'])->find($id);
-        return $orderItem;
+        return OrderItem::with(['order', 'product'])->findOrFail($id);
     }
-    public function createOrderItem(array $data)
+
+    public function createOrderItem(array $data): OrderItem
     {
-        $product = Product::where('id', $data['productId'])->select(['cost','price'])->first();
-        $orderItem = OrderItem::create([
-            'order_id' => $data['orderId'],
-            'product_id' => $data['productId'],
-            'price' => $product->price,
-            'cost'=> $product->cost,
-            'qty' => $data['qty'],
+        $product = Product::with('unit')
+            ->select(['id', 'cost', 'price', 'min_quantity', 'quantity_step', 'unit_id'])
+            ->findOrFail($data['productId']);
+
+        // Validate step & min quantity — throws if invalid
+        if ($error = $this->validateItemQuantity($product, (float) $data['qty'])) {
+            throw new \InvalidArgumentException($error);
+        }
+
+        return OrderItem::create([
+            'order_id'   => $data['orderId'],
+            'product_id' => $product->id,
+            // unit price × decimal qty = line total (calculated at order level)
+            'price'      => $product->price,
+            'cost'       => $product->cost,
+            'qty'        => $data['qty'],
         ]);
-        return $orderItem;
     }
-    public function updateOrderItem(int $id,array $data ){
-        $orderItem = OrderItem::find($id);
-        $product = Product::where('id', $orderItem->product_id)->select(['cost','price'])->first();
+
+    public function updateOrderItem(int $id, array $data): OrderItem
+    {
+        $orderItem = OrderItem::findOrFail($id);
+        $product   = Product::with('unit')
+            ->select(['id', 'cost', 'price', 'min_quantity', 'quantity_step', 'unit_id'])
+            ->findOrFail($orderItem->product_id);
+
+        // Validate step & min quantity — throws if invalid
+        if ($error = $this->validateItemQuantity($product, (float) $data['qty'])) {
+            throw new \InvalidArgumentException($error);
+        }
+
         $orderItem->update([
-            'qty' => $data['qty'],
+            'qty'   => $data['qty'],
             'price' => $product->price,
-            'cost'=> $product->cost,
+            'cost'  => $product->cost,
         ]);
-        return $orderItem;
+
+        return $orderItem->fresh();
     }
-    public function deleteOrderItem(int $id)
+
+    public function deleteOrderItem(int $id): void
     {
-        $orderItem = OrderItem::find($id);
-            $orderItem->delete();
+        OrderItem::findOrFail($id)->delete();
     }
 }

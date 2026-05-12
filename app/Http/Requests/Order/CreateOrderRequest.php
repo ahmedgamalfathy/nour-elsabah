@@ -5,6 +5,7 @@ namespace App\Http\Requests\Order;
 use App\Helpers\ApiResponse;
 use App\Enums\Order\OrderStatus;
 use App\Enums\Order\DiscountType;
+use App\Rules\ValidStepQuantity;
 use Illuminate\Validation\Rules\Enum;
 use App\Enums\ResponseCode\HttpStatusCode;
 use Illuminate\Foundation\Http\FormRequest;
@@ -30,14 +31,27 @@ class CreateOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'discount' => ['numeric'],
-            'discountType' => ['required', new Enum(DiscountType::class)],
-            'clientId' => 'required',
-            'clientPhoneId' => 'required',
-            'clientEmailId' => 'nullable',
-            'clientAddressId' => 'required',
-            'status' => ['required',new Enum(OrderStatus::class)],
-            'orderItems' => 'required|array',
+            'discount'       => ['nullable', 'numeric'],
+            'discountType'   => ['required', new Enum(DiscountType::class)],
+            'clientId'       => ['required'],
+            'clientPhoneId'  => ['required'],
+            'clientEmailId'  => ['nullable'],
+            'clientAddressId'=> ['required'],
+            'status'         => ['required', new Enum(OrderStatus::class)],
+            'orderItems'     => ['required', 'array'],
+            'orderItems.*.productId' => ['required', 'integer', 'exists:products,id'],
+            'orderItems.*.qty'       => [
+                'required',
+                'numeric',
+                'min:0.001',
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    preg_match('/orderItems\.(\d+)\.qty/', $attribute, $matches);
+                    $productId = $this->input("orderItems.{$matches[1]}.productId");
+                    if ($productId) {
+                        (new ValidStepQuantity((int) $productId))->validate($attribute, $value, $fail);
+                    }
+                },
+            ],
         ];
     }
 

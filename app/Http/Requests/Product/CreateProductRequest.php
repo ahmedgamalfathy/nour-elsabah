@@ -30,22 +30,25 @@ class CreateProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "productMedia" => ["nullable", "array"],
-            "name" => ["required", "string","unique:products,name"],
-            "price" => ["required","numeric"],
-            "status" => ["required", new Enum(ProductStatus::class)],
-            "description" => ["nullable", "string"],
-            "categoryId" => [ "nullable","numeric",'exists:categories,id'],
-            // "subCategoryId" => [ "nullable","numeric",'exists:categories,id'],
-            "specifications"=>["nullable","array"],
-            'cost' => ['nullable',"numeric"],
-            "isLimitedQuantity" => ["required", new Enum(LimitedQuantity::class)],
-            'quantity' => ['required_if:isLimitedQuantity,' . LimitedQuantity::LIMITED->value],
-            'unitType' => ['required', new Enum(UnitType::class)],
-            'isPromotion' => ['required','in:0,1'],
-            'isFreeShipping' => ['required','in:0,1'],
-            'crossedPrice' => ['nullable','numeric'],
-              //crossed_price, is_promotion, is_free_shipping, unit_type
+            'productMedia'  => ['nullable', 'array'],
+            'name'          => ['required', 'string', 'unique:products,name'],
+            // price = unit price (سعر الوحدة الواحدة)
+            'price'         => ['required', 'numeric', 'min:0'],
+            'status'        => ['required', new Enum(ProductStatus::class)],
+            'description'   => ['nullable', 'string'],
+            'categoryId'    => ['nullable', 'numeric', 'exists:categories,id'],
+            'specifications' => ['nullable', 'array'],
+            'cost'          => ['nullable', 'numeric', 'min:0'],
+            'isLimitedQuantity' => ['required', new Enum(LimitedQuantity::class)],
+            'quantity'      => ['required_if:isLimitedQuantity,' . LimitedQuantity::LIMITED->value, 'nullable', 'numeric', 'min:0'],
+            'unitType'      => ['required', new Enum(UnitType::class)],
+            'isPromotion'   => ['required', 'in:0,1'],
+            'isFreeShipping' => ['required', 'in:0,1'],
+            'crossedPrice'  => ['nullable', 'numeric', 'min:0'],
+            // Unit fields — default to 1 for piece-based products
+            'unitId'        => ['nullable', 'integer', 'exists:units,id'],
+            'quantityStep'  => ['nullable', 'numeric', 'min:0.001'],
+            'minQuantity'   => ['nullable', 'numeric', 'min:0.001'],
         ];
     }
     public function failedValidation(Validator $validator)

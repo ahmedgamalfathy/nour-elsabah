@@ -180,8 +180,10 @@ return [
             'unique' => 'The username has already been taken.',
         ],
         //genral
-        'required'=>'This field is required.',
-        'unique'=>'This value has already been taken.'
+        'required'              => 'This field is required.',
+        'unique'                => 'This value has already been taken.',
+        'invalid_step_quantity' => 'Quantity is not compatible with the product unit. Minimum increment is :step :unit.',
+        'qty_below_minimum'     => 'Quantity must not be less than :min :unit.',
     ],
 
     /*

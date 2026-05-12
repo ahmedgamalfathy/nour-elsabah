@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Select\SelectController;
 use App\Http\Controllers\Api\V1\Dashboard\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Dashboard\User\UserController;
+use App\Http\Controllers\Api\V1\Dashboard\Unit\UnitController;
 use App\Http\Controllers\Api\V1\Dashboard\Areas\AreaController;
 use App\Http\Controllers\Api\V1\Dashboard\Order\OrderController;
 use App\Http\Controllers\Api\V1\Dashboard\Stats\StatsController;
@@ -82,6 +83,7 @@ Route::prefix('v1/admin')->group(function () {
         "orders" => OrderController::class,
         "sliders"=> SliderController::class,
         'areas' => AreaController::class,
+        'units' => UnitController::class,
     ]);
     Route::apiResource('users', UserController::class);
     Route::apiSingleton('profile', UserProfileController::class);

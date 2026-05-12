@@ -64,38 +64,50 @@ class OrderController extends Controller implements HasMiddleware
     {
         try {
             DB::beginTransaction();
-            $result = $this->orderService->createOrder($createOrderRequest->validated());
-
-            if (!empty($result['availableQuantity'])) {
-                DB::rollBack();
-                return ApiResponse::error(
-                    __('crud.no_available_quantity'),
-                    $result['availableQuantity'],
-                    HttpStatusCode::UNPROCESSABLE_ENTITY
-                );
-            }
+            $this->orderService->createOrder($createOrderRequest->validated());
             DB::commit();
-            return ApiResponse::success([],__('crud.created'));
-        } catch (\Throwable $th) {
-            return ApiResponse::error(__('crud.server_error'),$th->getMessage(),HttpStatusCode::INTERNAL_SERVER_ERROR);
-        }
 
+            return ApiResponse::success([], __('crud.created'));
+        } catch (\App\Exceptions\InsufficientStockException $e) {
+            DB::rollBack();
+            return ApiResponse::error($e->getMessage(), [], HttpStatusCode::UNPROCESSABLE_ENTITY);
+        } catch (\InvalidArgumentException $e) {
+            DB::rollBack();
+            $payload = json_decode($e->getMessage(), true);
+            return ApiResponse::error(
+                'الكمية يجب أن تكون من مضاعفات وحدة البيع للمنتج.',
+                $payload['quantityErrors'] ?? [],
+                HttpStatusCode::UNPROCESSABLE_ENTITY
+            );
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return ApiResponse::error(__('crud.server_error'), $th->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function update(UpdateOrderRequest $updateOrderRequest, $id)
     {
         try {
             DB::beginTransaction();
-            $order = $this->orderService->updateOrder($id, $updateOrderRequest->validated());
-            if(isset($order['availableQuantity']) && count($order['availableQuantity'])){
-                return ApiResponse::error(__('crud.no_available_quantity'),$order,HttpStatusCode::UNPROCESSABLE_ENTITY);
-            }
+            $this->orderService->updateOrder($id, $updateOrderRequest->validated());
             DB::commit();
-            return ApiResponse::success([],__('crud.updated'));
-        } catch (\Throwable $th) {
-            return ApiResponse::error(__('crud.server_error'),[],HttpStatusCode::INTERNAL_SERVER_ERROR);
-        }
 
+            return ApiResponse::success([], __('crud.updated'));
+        } catch (\App\Exceptions\InsufficientStockException $e) {
+            DB::rollBack();
+            return ApiResponse::error($e->getMessage(), [], HttpStatusCode::UNPROCESSABLE_ENTITY);
+        } catch (\InvalidArgumentException $e) {
+            DB::rollBack();
+            $payload = json_decode($e->getMessage(), true);
+            return ApiResponse::error(
+                'الكمية يجب أن تكون من مضاعفات وحدة البيع للمنتج.',
+                $payload['quantityErrors'] ?? [],
+                HttpStatusCode::UNPROCESSABLE_ENTITY
+            );
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function destroy(int $id)
