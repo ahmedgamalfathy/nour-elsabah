@@ -20,6 +20,11 @@ class ProductResource extends JsonResource
             'minQuantity'        => $this->min_quantity??'',
             'quantityStep'       => $this->quantity_step??'',
             'unitId'             =>$this->unit_id??'',
+            'unit'=>[
+                "id"=>$this->unit->id?? "",
+                "name"=>$this->unit->name?? "",
+                "value"=>$this->unit->step?? "",
+            ],
             'isLimitedQuantity'  => $this->is_limited_quantity,
             'description'        => $this->description ?? '',
             'categoryId'         => $this->category_id ?? '',
