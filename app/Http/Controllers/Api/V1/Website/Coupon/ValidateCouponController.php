@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\V1\Website\Coupon;
 
 use App\Models\Order\Order;
 use App\Helpers\ApiResponse;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Website\Coupon\ValidateCouponRequest;
 use App\Services\Coupon\CouponService;
 use App\Enums\ResponseCode\HttpStatusCode;
 
@@ -18,12 +18,9 @@ class ValidateCouponController extends Controller
         $this->couponService = $couponService;
     }
 
-    public function __invoke(Request $request)
+    public function __invoke(ValidateCouponRequest $request)
     {
-        $data = $request->validate([
-            'code' =>[ 'required','string','exists:coupons,code'],
-            'orderId'=>'required|exists:orders,id'
-        ]);
+        $data = $request->validated();
          $order = Order::find($data['orderId']);
         if(!$order){
           return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
@@ -53,4 +50,3 @@ class ValidateCouponController extends Controller
         ]);
     }
 }
-

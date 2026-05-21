@@ -12,6 +12,26 @@ class OrderItem extends Model
     use  HasFactory;
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return [
+            'price' => 'decimal:2',
+            'cost' => 'decimal:2',
+            'qty' => 'decimal:3',
+        ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(function (OrderItem $item): void {
+            $item->order?->recalculateTotals();
+        });
+
+        static::deleted(function (OrderItem $item): void {
+            $item->order?->recalculateTotals();
+        });
+    }
+
     public function order()
     {
         return $this->belongsTo(Order::class);

@@ -24,6 +24,13 @@ class Order extends Model
         return [
             'status' => OrderStatus::class,
             'discount_type' => DiscountType::class,
+            'inventory_deducted' => 'boolean',
+            'discount' => 'decimal:2',
+            'total_cost' => 'decimal:2',
+            'price' => 'decimal:2',
+            'price_after_discount' => 'decimal:2',
+            'coupon_discount' => 'decimal:2',
+            'points_discount_amount' => 'decimal:2',
         ];
     }
 
@@ -56,4 +63,54 @@ class Order extends Model
         return $this->belongsTo(ClientAdrress::class);
     }
 
+    /**
+     * Recalculate the order monetary state from persisted line items.
+     *
+     * This method is the aggregate boundary for pricing. Controllers and
+     * application services may decide which items exist, but the Order model is
+     * the single source of truth for totals, order-level discounts, coupon
+     * discounts, and redeemed-points discounts.
+     */
+    public function recalculateTotals(): self
+    {
+        $items = $this->items()->get(['price', 'cost', 'qty']);
+
+        $price = $items->reduce(
+            fn (float $carry, OrderItem $item): float => $carry + ((float) $item->price * (float) $item->qty),
+            0.0
+        );
+
+        $cost = $items->reduce(
+            fn (float $carry, OrderItem $item): float => $carry + ((float) $item->cost * (float) $item->qty),
+            0.0
+        );
+
+        $orderDiscount = $this->calculateOrderDiscount($price);
+        $couponDiscount = (float) ($this->coupon_discount ?? 0);
+        $pointsDiscount = (float) ($this->points_discount_amount ?? 0);
+
+        $this->forceFill([
+            'price' => $price,
+            'total_cost' => $cost,
+            'price_after_discount' => max(0, $price - $orderDiscount - $couponDiscount - $pointsDiscount),
+        ])->saveQuietly();
+
+        return $this->refresh();
+    }
+
+    public function isLockedForCheckout(): bool
+    {
+        return $this->status === OrderStatus::CHECKOUT;
+    }
+
+    private function calculateOrderDiscount(float $price): float
+    {
+        $discount = (float) ($this->discount ?? 0);
+
+        return match ($this->discount_type) {
+            DiscountType::PERCENTAGE => $price * ($discount / 100),
+            DiscountType::FIXCED => $discount,
+            default => 0.0,
+        };
+    }
 }

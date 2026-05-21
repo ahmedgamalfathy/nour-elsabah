@@ -108,13 +108,11 @@ class PointsService
             ]);
 
             // تحديث الطلب
-            $newPriceAfterDiscount = $order->price_after_discount - $discountAmount;
-
             $order->update([
                 'points_redeemed' => $pointsToRedeem,
                 'points_discount_amount' => $discountAmount,
-                'price_after_discount' => $newPriceAfterDiscount,
             ]);
+            $order->recalculateTotals();
         });
 
         return [
@@ -151,10 +149,10 @@ class PointsService
 
             // تحديث الطلب
             $order->update([
-                'price_after_discount' => $order->price_after_discount + $order->points_discount_amount,
                 'points_redeemed' => 0,
                 'points_discount_amount' => 0,
             ]);
+            $order->recalculateTotals();
         });
     }
 

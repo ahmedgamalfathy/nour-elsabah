@@ -18,6 +18,8 @@ use App\Enums\ResponseCode\HttpStatusCode;
 use App\Interfaces\PaymentGatewayInterface;
 use App\Services\Payment\BasePaymentService;
 use App\Enums\Product\LimitedQuantity;
+use App\Services\Inventory\InventoryService;
+use App\Exceptions\InsufficientStockException;
 
 class StripePaymentService extends BasePaymentService implements PaymentGatewayInterface
 {
@@ -53,16 +55,15 @@ class StripePaymentService extends BasePaymentService implements PaymentGatewayI
         if (!in_array($order->status, [OrderStatus::DRAFT, OrderStatus::IN_CART])) {
             return ApiResponse::error(__('Order must be in draft or in-cart status to process payment'), [], HttpStatusCode::UNPROCESSABLE_ENTITY);
         }
-        foreach ($order->items as $item) {
-            if ($item->is_limited_quantity == LimitedQuantity::LIMITED && $item->product->quantity < $item->qty) {
-                $avilableQuantity[] = [
-                    'productId' => $item->product->id,
-                    'quantity' => $item->product->quantity,
-                    'name' => $item->product->name
-                ];
-                return  $avilableQuantity;
-            }
+        try {
+            app(InventoryService::class)->assertStockAvailable($order);
+        } catch (InsufficientStockException $e) {
+            return ApiResponse::error($e->getMessage(), [
+                'product' => $e->productName,
+                'availableQuantity' => $e->availableQuantity,
+            ], HttpStatusCode::UNPROCESSABLE_ENTITY);
         }
+
         $data = $this->formatData([
             "amount" => $order->price_after_discount * 100,
             "currency" => "USD",
@@ -73,6 +74,8 @@ class StripePaymentService extends BasePaymentService implements PaymentGatewayI
 
         $response =$this->buildRequest('POST', '/v1/checkout/sessions', $data, 'form_params');
         if($response->getData(true)['success']) {
+            $order->update(['status' => OrderStatus::CHECKOUT->value]);
+
             return ['success' => true, 'url' => $response->getData(true)['data']['url']];
         }
         return ['success' => false,'url'=>route('payment.failed')];
@@ -87,9 +90,6 @@ class StripePaymentService extends BasePaymentService implements PaymentGatewayI
             $order = Order::find($response->getData(true)['data']['metadata']['orderId']);
             $order->status = OrderStatus::CONFIRM->value;
             $order->save();
-            foreach ($order->items as $item) {
-                $item->product->decrement('quantity', $item->qty);
-            }
             DB::table('payment_callback')->insert([
                 //session_id ,name ,email, currency ,status ,country ,payment_status,amount_total
                     'session_id'=>$request->get('session_id'),

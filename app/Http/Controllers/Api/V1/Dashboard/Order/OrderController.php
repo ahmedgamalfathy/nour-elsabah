@@ -5,18 +5,16 @@ namespace App\Http\Controllers\Api\V1\Dashboard\Order;
 use App\Models\Order\Order;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
-use App\Enums\Order\OrderStatus;
 use App\Utils\PaginateCollection;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Services\Order\OrderService;
-use Illuminate\Validation\Rules\Enum;
-use App\Services\Points\PointsService;
 use App\Enums\ResponseCode\HttpStatusCode;
 use App\Http\Resources\Order\OrderResource;
 use Illuminate\Routing\Controllers\Middleware;
-use App\Http\Requests\Order\CreateOrderRequest;
-use App\Http\Requests\Order\UpdateOrderRequest;
+use App\Http\Requests\Api\V1\Dashboard\Order\BulkUpdateOrderStatusRequest;
+use App\Http\Requests\Api\V1\Dashboard\Order\StoreOrderRequest;
+use App\Http\Requests\Api\V1\Dashboard\Order\UpdateOrderRequest;
 use App\Http\Resources\Order\AllOrderCollection;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -24,11 +22,9 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class OrderController extends Controller implements HasMiddleware
 {
     protected $orderService;
-    protected $pointsService;
-    public function __construct(OrderService $orderService,PointsService $pointsService)
+    public function __construct(OrderService $orderService)
     {
         $this->orderService = $orderService;
-        $this->pointsService = $pointsService;
     }
     public static function middleware(): array
     {
@@ -60,7 +56,7 @@ class OrderController extends Controller implements HasMiddleware
         }
     }
 
-    public function store(CreateOrderRequest $createOrderRequest)
+    public function store(StoreOrderRequest $createOrderRequest)
     {
         try {
             DB::beginTransaction();
@@ -122,30 +118,22 @@ class OrderController extends Controller implements HasMiddleware
         }
 
     }
-    public function bulkUpdateStatus(Request $request)
+    public function bulkUpdateStatus(BulkUpdateOrderStatusRequest $request)
     {
         try {
-            $data = $request->validate([
-                'action' =>[ 'required','integer',new Enum(OrderStatus::class) ],
-                'ids' => 'required|array|min:1',
-                'ids.*' => 'required|integer|exists:orders,id',
-            ]);
-            // تحديث مباشر
-            $orders = Order::whereIn('id', $data['ids'])
-                ->update(['status' => $data['action']]);
-            $updatedCount = count($data['ids']);
-            foreach($data['ids'] as $orderId){
-                $order = Order::find($orderId);
-                if ($order->status == OrderStatus::CONFIRM &&
-                    $order->points_earned == 0) {
-                    $this->pointsService->addPointsForOrder($order);
-                }
-                if ($order->status == OrderStatus::CANCELED &&
-                    $order->points_redeemed > 0) {
-                    $this->pointsService->cancelPointsRedemption($order);
-                }
+            $data = $request->validated();
+                $orders = Order::whereIn('id', $data['ids'])
+                ->with(['items.product', 'client','clientEmail','clientAddress','clientPhone']) 
+                ->get();
+            
+            // 2. المرور على كل طلب وتحديثه الفردي الصارم لتفعيل الـ Observer
+            foreach ($orders as $order) {
+                // نغير الحالة
+                $order->status = $data['action'];
+                
+                // حفظ الطلب -> هنا سينطلق الـ Observer وهو يمتلك كافة بيانات الـ items والمخزون جاهزة في الذاكرة
+                $order->save();
             }
-
             return ApiResponse::success([], __('crud.updated'));
         } catch (\Throwable $e) {
             return ApiResponse::error(

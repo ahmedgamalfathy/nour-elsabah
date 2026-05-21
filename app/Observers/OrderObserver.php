@@ -2,51 +2,58 @@
 
 namespace App\Observers;
 
-use App\Models\Order\Order;
 use App\Enums\Order\OrderStatus;
+use App\Models\Order\Order;
+use App\Services\Inventory\InventoryService;
 use App\Services\Points\PointsService;
 
 class OrderObserver
 {
-    protected $pointsService;
+    public function __construct(
+        protected PointsService $pointsService,
+        protected InventoryService $inventoryService,
+    ) {}
 
-    public function __construct(PointsService $pointsService)
+    /**
+     * Central order side-effect guard.
+     */
+    public function updated(Order $order): void
     {
-        $this->pointsService = $pointsService;
+        // الصح: نتحقق من الـ Original value مقابل القيمة الحالية لضمان رصد التغيير بدقة مع الـ Enums
+        if ($order->getOriginal('status') === $order->status->value) {
+            return;
+        }
+
+        // نقارن دائماً باستخدام ->value لضمان تطابق أنواع البيانات (الأرقام)
+        if ($order->status->value === OrderStatus::CONFIRM->value) {
+            $this->inventoryService->decrementStockIfNeeded($order);
+
+            if ((int) $order->points_earned === 0) {
+                $this->pointsService->addPointsForOrder($order->fresh());
+            }
+        }
+
+        if ($order->status->value === OrderStatus::CANCELED->value) {
+            $this->inventoryService->restoreStock($order);
+
+            if ((int) $order->points_redeemed > 0) {
+                $this->pointsService->cancelPointsRedemption($order->fresh());
+            }
+        }
     }
 
     /**
-     * يتم تنفيذه عند تحديث الطلب
+     * Deleting an order is an inventory-affecting operation.
      */
-// OrderObserver.php
-public function updated(Order $order)
-{
-    // إضافة نقاط عند التأكيد
-    if ($order->status == OrderStatus::CONFIRM->value &&
-        $order->points_earned == 0) {
-        $this->pointsService->addPointsForOrder($order);
-    }
-
-    // إلغاء النقاط عند الإلغاء
-    if ($order->status == OrderStatus::CANCELED->value &&
-        $order->points_redeemed > 0) {
-        $this->pointsService->cancelPointsRedemption($order);
-    }
-}
-
-    /**
-     * (اختياري) يتم تنفيذه عند إنشاء الطلب
-     */
-    public function created(Order $order)
+    public function deleting(Order $order): void
     {
-        //
-    }
+        // شحن العلاقات مسبقاً قبل الحذف لضمان وجود الـ items في الذاكرة
+        $order->loadMissing('items.product');
 
-    /**
-     * (اختياري) يتم تنفيذه عند حذف الطلب
-     */
-    public function deleted(Order $order)
-    {
-        //
+        $this->inventoryService->restoreStock($order);
+
+        if ((int) $order->points_redeemed > 0) {
+            $this->pointsService->cancelPointsRedemption($order);
+        }
     }
 }

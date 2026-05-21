@@ -22,7 +22,6 @@ use App\Http\Controllers\Api\V1\Dashboard\Product\ProductController;
 use App\Http\Controllers\Api\V1\Website\Order\ClientOrderController;
 use App\Http\Controllers\Api\V1\Dashboard\User\UserProfileController;
 use App\Http\Controllers\Api\V1\Website\Auth\ForgotPasswordController;
-use App\Http\Controllers\Api\V1\Website\Order\AuthOrderItemController;
 use App\Http\Controllers\Api\V1\Website\Order\CheckQuantityController;
 use App\Http\Controllers\Api\V1\Dashboard\Client\ClientEmailController;
 // use App\Http\Controllers\Api\V1\Dashboard\Category\SubCategoryController;
@@ -182,7 +181,6 @@ Route::prefix('v1/website')->group(function(){
         return \App\Helpers\ApiResponse::success(array_filter($gateways));
     });
 });//website ...
-// Route::match(['GET','POST'],'/payment/callback', [PaymentController::class, 'callBack']);
-Route::match(['GET', 'POST'], '/payment/callback/paypal', [PaymentController::class, 'paypalCallback']);
-Route::match(['GET', 'POST'], '/payment/callback/stripe', [PaymentController::class, 'stripeCallback']);
-
+Route::match(['GET','POST'],'/payment/callback', [PaymentController::class, 'callBack']);
+// Route::match(['GET', 'POST'], '/payment/callback/paypal', [PaymentController::class, 'paypalCallback']);
+// Route::match(['GET', 'POST'], '/payment/callback/stripe', [PaymentController::class, 'stripeCallback']);

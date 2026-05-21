@@ -10,9 +10,11 @@ use App\Enums\Order\OrderStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Enums\Product\LimitedQuantity;
+use App\Exceptions\InsufficientStockException;
 use Illuminate\Support\Facades\Storage;
 use App\Enums\ResponseCode\HttpStatusCode;
 use App\Interfaces\PaymentGatewayInterface;
+use App\Services\Inventory\InventoryService;
 
 class PaypalPaymentService extends BasePaymentService implements PaymentGatewayInterface
 {
@@ -53,18 +55,15 @@ class PaypalPaymentService extends BasePaymentService implements PaymentGatewayI
             return ApiResponse::error(__('Order must be in draft or in-cart status to process payment'), [], HttpStatusCode::UNPROCESSABLE_ENTITY);
         }
 
-        foreach ($order->items as $item) {
-            if ($item->is_limited_quantity == LimitedQuantity::LIMITED && $item->product->quantity < $item->qty ) {
-                return [
-                    'success' => false,
-                    'insufficient' => [
-                        'productId' => $item->product->id,
-                        'quantity' => $item->product->quantity,
-                        'name' => $item->product->name
-                    ]
-                ];
-            }
+        try {
+            app(InventoryService::class)->assertStockAvailable($order);
+        } catch (InsufficientStockException $e) {
+            return ApiResponse::error($e->getMessage(), [
+                'product' => $e->productName,
+                'availableQuantity' => $e->availableQuantity,
+            ], HttpStatusCode::UNPROCESSABLE_ENTITY);
         }
+
         $data = $this->formatData([
             'amount' => $order->price_after_discount ,
             'orderId' => $order->id,
@@ -74,6 +73,8 @@ class PaypalPaymentService extends BasePaymentService implements PaymentGatewayI
         $response = $this->buildRequest("POST", "/v2/checkout/orders", $data);
         //handel payment response data and return it
         if ($response->getData(true)['success']){
+
+            $order->update(['status' => OrderStatus::CHECKOUT->value]);
 
             return ['success' => true,'url'=>$response->getData(true)['data']['links'][1]['href']];
         }
@@ -97,9 +98,6 @@ class PaypalPaymentService extends BasePaymentService implements PaymentGatewayI
                 $order->status = OrderStatus::CONFIRM;
                 $order->save();
             });
-            foreach ($order->items as $item) {
-                $item->product->decrement('quantity', $item->qty);
-            }
             DB::table('payment_callback')->insert([
                 'session_id' => $token,
                 'name' => $response->getData(true)['data']['payer']['name']['given_name'] ?? null,
