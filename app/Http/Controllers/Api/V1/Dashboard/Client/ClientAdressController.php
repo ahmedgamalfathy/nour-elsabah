@@ -28,8 +28,8 @@ class ClientAdressController extends Controller implements HasMiddleware
         return [
             new Middleware('auth:api'),
             new Middleware('permission:all_client_addresses', only:['index']),
-            new Middleware('permission:create_client_address', only:['create']),
-            new Middleware('permission:edit_client_address', only:['edit']),
+            new Middleware('permission:create_client_address', only:['store']),
+            new Middleware('permission:edit_client_address', only:['show']),
             new Middleware('permission:update_client_address', only:['update']),
             new Middleware('permission:destroy_client_address', only:['destroy']),
         ];
@@ -74,4 +74,3 @@ class ClientAdressController extends Controller implements HasMiddleware
 
     }
 }
-

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Website\Client;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use App\Models\Client\ClientUser;
+use App\Models\Client\ClientPhone;
 
 use App\Utils\PaginateCollection;
 use App\Http\Controllers\Controller;
@@ -13,6 +14,7 @@ use App\Services\Client\ClientPhoneService;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Log;
 use App\Http\Resources\Client\ClientContact\ClientContactResource;
 use App\Http\Requests\Client\ClientContact\CreateClientContactRequest;
 use App\Http\Resources\Client\ClientContact\AllClientContactCollection;
@@ -41,10 +43,11 @@ class ClientPhoneWebsiteController extends Controller implements HasMiddleware
     }
     public function show($id)
     {
-        $clientPhone = $this->clientPhoneService->editClientPhone($id);
-        if (!$clientPhone) {
-            return apiResponse::error(__('crud.not_found'), HttpStatusCode::NOT_FOUND);
-        }
+        $clientId = request()->user()->client_id;
+        $clientPhone = ClientPhone::where('id', $id)
+            ->where('client_id', $clientId)
+            ->firstOrFail();
+
         return ApiResponse::success(new ClientContactResource($clientPhone));
     }
 
@@ -53,12 +56,11 @@ class ClientPhoneWebsiteController extends Controller implements HasMiddleware
     {
         try{
             $data = $createClientContactRequest->validated();
-            // $clientUserId = $createClientContactRequest->user()->id;
-            // $clientId = ClientUser::where('id', $clientUserId)->first()->client_id;
-            // $data['clientId'] = $clientId;
+            $data['clientId'] = $createClientContactRequest->user()->client_id;
             $this->clientPhoneService->createClientPhone($data);
             return ApiResponse::success([], __('crud.created'),  HttpStatusCode::CREATED);
         }catch(\Throwable $th){
+            Log::error($th->getMessage(), ['exception' => $th]);
             return ApiResponse::error(__('crud.server_error'),[],HttpStatusCode::UNPROCESSABLE_ENTITY);
         }
     }
@@ -66,8 +68,11 @@ class ClientPhoneWebsiteController extends Controller implements HasMiddleware
     public function update(int $id,UpdateClientContactWebsiteRequest $updateClientContactWebsiteRequest )
     {
         try{
-            $userId =$updateClientContactWebsiteRequest->user()->id;
-            $clientId = ClientUser::where('id', $userId)->first()->client_id;
+            $clientId = $updateClientContactWebsiteRequest->user()->client_id;
+            ClientPhone::where('id', $id)
+                ->where('client_id', $clientId)
+                ->firstOrFail();
+
             $data =$updateClientContactWebsiteRequest->validated();
             $data['clientId'] = $clientId;
             $this->clientPhoneService->updateClientPhone($id, $data);
@@ -76,6 +81,7 @@ class ClientPhoneWebsiteController extends Controller implements HasMiddleware
             return ApiResponse::error(__('crud.not_found'), [], HttpStatusCode::NOT_FOUND);
         }
         catch(\Throwable $th){
+            Log::error($th->getMessage(), ['exception' => $th]);
             return ApiResponse::error(__('crud.server_error'),[],HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
 
@@ -84,15 +90,16 @@ class ClientPhoneWebsiteController extends Controller implements HasMiddleware
     public function destroy(int $id)
     {
         try{
-            $clientUserId = request()->user()->id;
-            if(!$clientUserId){
-                return ApiResponse::error(__('crud.not_found'), [], HttpStatusCode::NOT_FOUND);
-            }
+            ClientPhone::where('id', $id)
+                ->where('client_id', request()->user()->client_id)
+                ->firstOrFail();
+
             $this->clientPhoneService->deleteClientPhone($id);
             return  ApiResponse::success([], __('crud.deleted'),  HttpStatusCode::OK);
         }catch(ModelNotFoundException $e){
             return ApiResponse::error(__('crud.not_found'), [], HttpStatusCode::NOT_FOUND);
         }catch(\Throwable $th){
+            Log::error($th->getMessage(), ['exception' => $th]);
             return ApiResponse::error(__('crud.server_error'),[],HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }

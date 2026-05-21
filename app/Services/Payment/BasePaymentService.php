@@ -4,6 +4,7 @@ namespace App\Services\Payment;
 
 use Exception;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class BasePaymentService
 {
@@ -25,10 +26,12 @@ class BasePaymentService
                 'data' => $response->json(),
             ], $response->status());
         } catch (Exception $e) {
+            Log::error($e->getMessage(), ['exception' => $e]);
+
             return response()->json([
                 'success' => false,
                 'status' => 500,
-                'message' => $e->getMessage(),
+                'message' => __('crud.server_error'),
             ], 500);
         }
     }

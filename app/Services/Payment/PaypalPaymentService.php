@@ -44,7 +44,9 @@ class PaypalPaymentService extends BasePaymentService implements PaymentGatewayI
         }
 
         $orderId = $request->input('orderId');
-        $order = Order::find($orderId);
+        $order = Order::where('id', $orderId)
+            ->where('client_id', $request->user()->client_id)
+            ->first();
         if(!$order) {
             return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
         }
@@ -58,7 +60,7 @@ class PaypalPaymentService extends BasePaymentService implements PaymentGatewayI
         try {
             app(InventoryService::class)->assertStockAvailable($order);
         } catch (InsufficientStockException $e) {
-            return ApiResponse::error($e->getMessage(), [
+            return ApiResponse::error(__('crud.no_available_quantity'), [
                 'product' => $e->productName,
                 'availableQuantity' => $e->availableQuantity,
             ], HttpStatusCode::UNPROCESSABLE_ENTITY);
@@ -93,7 +95,9 @@ class PaypalPaymentService extends BasePaymentService implements PaymentGatewayI
             preg_match('/order_(\d+)_client_(\d+)/', $referenceId, $matches);
             $orderId = $matches[1] ?? null;
             $clientId = $matches[2] ?? null;
-            $order = Order::find($orderId);
+            $order = Order::where('id', $orderId)
+                ->where('client_id', $clientId)
+                ->firstOrFail();
             DB::transaction(function () use ($order) {
                 $order->status = OrderStatus::CONFIRM;
                 $order->save();

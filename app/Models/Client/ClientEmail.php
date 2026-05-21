@@ -11,7 +11,11 @@ class ClientEmail extends Model
 {
     use HasFactory,SoftDeletes;
     protected $table = 'client_emails';
-    protected $guarded = [];
+    protected $fillable = [
+        'client_id',
+        'email',
+        'is_main',
+    ];
 
     public function client()
     {

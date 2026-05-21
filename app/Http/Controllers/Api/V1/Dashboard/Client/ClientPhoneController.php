@@ -28,8 +28,8 @@ class ClientPhoneController extends Controller implements HasMiddleware
          return [
              new Middleware('auth:api'),
              new Middleware('permission:all_client_phones', only:['index']),
-             new Middleware('permission:create_client_phone', only:['create']),
-             new Middleware('permission:edit_client_phone', only:['edit']),
+             new Middleware('permission:create_client_phone', only:['store']),
+             new Middleware('permission:edit_client_phone', only:['show']),
              new Middleware('permission:update_client_phone', only:['update']),
              new Middleware('permission:destroy_client_phone', only:['destroy']),
          ];

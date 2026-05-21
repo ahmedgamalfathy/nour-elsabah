@@ -21,7 +21,9 @@ class ValidateCouponController extends Controller
     public function __invoke(ValidateCouponRequest $request)
     {
         $data = $request->validated();
-         $order = Order::find($data['orderId']);
+         $order = Order::where('id', $data['orderId'])
+             ->where('client_id', $request->user()->client_id)
+             ->first();
         if(!$order){
           return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
         }

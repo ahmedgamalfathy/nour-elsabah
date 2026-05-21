@@ -26,10 +26,10 @@ class ParameterValueController extends Controller implements HasMiddleware
         return [
             // new Middleware('auth:api'),
             new Middleware('permission:all_parameters', only:['index']),
-            new Middleware('permission:create_parameter', only:['create']),
-            new Middleware('permission:edit_parameter', only:['edit']),
+            new Middleware('permission:create_parameter', only:['store']),
+            new Middleware('permission:edit_parameter', only:['show']),
             new Middleware('permission:update_parameter', only:['update']),
-            new Middleware('permission:delete_parameter', only:['delete']),
+            new Middleware('permission:delete_parameter', only:['destroy']),
         ];
 
 

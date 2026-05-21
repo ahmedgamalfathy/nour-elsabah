@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1\Dashboard\Product;
 use Throwable;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
-use App\Utils\PaginateCollection;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Services\Product\ProductService;
@@ -17,7 +16,7 @@ use App\Http\Requests\Product\CreateProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
 use App\Http\Resources\Product\AllProductCollection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller implements HasMiddleware
 {
@@ -31,8 +30,8 @@ class ProductController extends Controller implements HasMiddleware
         return [
             new Middleware('auth:api'),
             new Middleware('permission:all_products', only:['index']),
-            new Middleware('permission:create_product', only:['create']),
-            new Middleware('permission:edit_product', only:['edit']),
+            new Middleware('permission:create_product', only:['store']),
+            new Middleware('permission:edit_product', only:['show']),
             new Middleware('permission:update_product', only:['update']),
             new Middleware('permission:destroy_product', only:['destroy']),
         ];
@@ -42,8 +41,8 @@ class ProductController extends Controller implements HasMiddleware
      */
     public function index(Request $request)
     {
-      $products= $this->productService->allProducts();
-       return ApiResponse::success(new AllProductCollection(PaginateCollection::paginate($products, $request->pageSize?$request->pageSize:10)));
+      $products= $this->productService->allProducts((int) ($request->pageSize ?: 10));
+       return ApiResponse::success(new AllProductCollection($products));
     }
 
     /**
@@ -58,7 +57,8 @@ class ProductController extends Controller implements HasMiddleware
             return ApiResponse::success([],__('crud.created'));
         } catch (Throwable $th) {
             DB::rollBack( );
-            return ApiResponse::error(__('crud.server_error'),$th->getMessage(),HttpStatusCode::INTERNAL_SERVER_ERROR);
+            Log::error($th->getMessage(), ['exception' => $th]);
+            return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
 
     }
@@ -75,6 +75,7 @@ class ProductController extends Controller implements HasMiddleware
         }catch (ModelNotFoundException $th) {
             return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
         }catch (\Throwable $th) {
+            Log::error($th->getMessage(), ['exception' => $th]);
             return ApiResponse::error(__('crud.server_error'),[],HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
 
@@ -91,7 +92,8 @@ class ProductController extends Controller implements HasMiddleware
             DB::commit();
             return ApiResponse::success([], __('crud.updated'));
         }catch (Throwable $th) {
-            return ApiResponse::error(__('crud.server_error'),$th->getMessage(),HttpStatusCode::INTERNAL_SERVER_ERROR);
+            Log::error($th->getMessage(), ['exception' => $th]);
+            return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
 
     }
@@ -108,6 +110,7 @@ class ProductController extends Controller implements HasMiddleware
         }catch (ModelNotFoundException $th) {
             return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
         }catch (\Throwable $th) {
+            Log::error($th->getMessage(), ['exception' => $th]);
             return ApiResponse::error(__('crud.server_error'),[],HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
 

@@ -14,6 +14,7 @@ use App\Services\Client\ClientAddressService;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Log;
 use App\Http\Resources\Client\ClientAddress\ClientAddressResource;
 use App\Http\Requests\Client\ClientAddress\CreateClientAddressRequest;
 use App\Http\Requests\Client\ClientAddress\UpdateClientAddressRequest;
@@ -45,19 +46,14 @@ class ClientAdressWebsiteController extends Controller implements HasMiddleware
 
     public function show(int $id , Request $request)
     {
-        $clienUsertId = $request->user()->id;
-        $clientId = ClientUser::where('id', $clienUsertId)->first()->client_id;
-        $clientAddress = ClientAdrress::find($id);
-        if($clientId != $clientAddress->client_id){
-            return ApiResponse::error(__('crud.not_found'), HttpStatusCode::NOT_FOUND);
-        }
-        if (!$clientId) {
+        $clientAddress = ClientAdrress::where('id', $id)
+            ->where('client_id', $request->user()->client_id)
+            ->first();
+
+        if (! $clientAddress) {
             return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
         }
-        $clientAddress = $this->clientAddressService->editClientAddress($id);
-        if (!$clientAddress) {
-            return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
-        }
+
         return ApiResponse::success(new ClientAddressResource($clientAddress));
     }
     public function store(CreateClientAddressWebsiteRequest $createClientAddressWebsiteRequest)
@@ -71,33 +67,36 @@ class ClientAdressWebsiteController extends Controller implements HasMiddleware
     }
     public function update(int $id,UpdateClientAddressWebsiteRequest $updateClientAddressWebsiteRequest)
     {
-        $clientUserId = $updateClientAddressWebsiteRequest->user()->id;
-        $clientId = ClientUser::where('id', $clientUserId)->first()->client_id;
+        $clientId = $updateClientAddressWebsiteRequest->user()->client_id;
+        $clientAddress = ClientAdrress::where('id', $id)
+            ->where('client_id', $clientId)
+            ->first();
+
+        if (! $clientAddress) {
+            return ApiResponse::error(__('crud.not_found'), [], HttpStatusCode::NOT_FOUND);
+        }
+
         $data = $updateClientAddressWebsiteRequest->validated();
         $data['clientId'] = $clientId;
-        $clientAddress = $this->clientAddressService->updateClientAddress($id, $data);
-        if (!$clientAddress) {
-            return ApiResponse::error(__('crud.not_found'), HttpStatusCode::NOT_FOUND);
-        }
+        $this->clientAddressService->updateClientAddress($id, $data);
+
         return ApiResponse::success([], __('crud.updated'));
     }
     public function destroy(int $id , Request $request)
     {
         try {
-            $clientUserId = $request->user()->id;
-            $clientId = ClientUser::where('id', $clientUserId)->first()->client_id;
-            $clientAddress = ClientAdrress::find($id);
-            if($clientId != $clientAddress->client_id){
-                return ApiResponse::error(__('crud.not_found'), HttpStatusCode::NOT_FOUND);
-            }
+            ClientAdrress::where('id', $id)
+                ->where('client_id', $request->user()->client_id)
+                ->firstOrFail();
+
             $this->clientAddressService->deleteClientAddress($id);
             return ApiResponse::success([], __('crud.deleted'));
         } catch(ModelNotFoundException $e){
             return ApiResponse::error(__('crud.not_found'), HttpStatusCode::NOT_FOUND);
         }catch (\Throwable $th) {
+            Log::error($th->getMessage(), ['exception' => $th]);
             return ApiResponse::error(__('crud.server_error'),[], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
 
     }
 }
-

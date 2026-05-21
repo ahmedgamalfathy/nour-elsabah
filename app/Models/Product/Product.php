@@ -15,7 +15,27 @@ class Product extends Model
 {
     use CreatedUpdatedBy, HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'name',
+        'description',
+        'specifications',
+        'price',
+        'cost',
+        'is_limited_quantity',
+        'quantity',
+        'min_quantity',
+        'quantity_step',
+        'unit_id',
+        'status',
+        'crossed_price',
+        'is_promotion',
+        'is_free_shipping',
+        'unit_type',
+        'category_id',
+        'sub_category_id',
+        'created_by',
+        'updated_by',
+    ];
 
     protected function casts(): array
     {

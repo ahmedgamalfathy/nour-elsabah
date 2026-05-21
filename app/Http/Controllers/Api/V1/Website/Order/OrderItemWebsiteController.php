@@ -19,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderItemWebsiteController extends Controller implements HasMiddleware
 {
@@ -52,7 +53,10 @@ class OrderItemWebsiteController extends Controller implements HasMiddleware
         try {
             return DB::transaction(function () use ($request, $orderId) {
                 $data = $request->validated();
-                $order = Order::whereKey($orderId)->lockForUpdate()->firstOrFail();
+                $order = Order::whereKey($orderId)
+                    ->where('client_id', $request->user()->client_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
                 if ($order->isLockedForCheckout()) {
                     return ApiResponse::error('Order is locked for checkout.', [], HttpStatusCode::UNPROCESSABLE_ENTITY);
                 }
@@ -80,12 +84,13 @@ class OrderItemWebsiteController extends Controller implements HasMiddleware
                 return ApiResponse::success(__('crud.created'));
             });
         } catch (InsufficientStockException $e) {
-            return ApiResponse::error($e->getMessage(), [
+            return ApiResponse::error(__('crud.no_available_quantity'), [
                 'product' => $e->productName,
                 'availableQuantity' => $e->availableQuantity,
             ], HttpStatusCode::UNPROCESSABLE_ENTITY);
         } catch (\Throwable $e) {
-            return ApiResponse::error(__('crud.server_error'), $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+            Log::error($e->getMessage(), ['exception' => $e]);
+            return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -94,7 +99,10 @@ class OrderItemWebsiteController extends Controller implements HasMiddleware
         try {
             return DB::transaction(function () use ($request, $itemId) {
                 $data = $request->validated();
-                $item = OrderItem::with(['order', 'product.unit'])->lockForUpdate()->findOrFail($itemId);
+                $item = OrderItem::with(['order', 'product.unit'])
+                    ->whereHas('order', fn ($query) => $query->where('client_id', $request->user()->client_id))
+                    ->lockForUpdate()
+                    ->findOrFail($itemId);
                 if ($item->order->isLockedForCheckout()) {
                     return ApiResponse::error('Order is locked for checkout.', [], HttpStatusCode::UNPROCESSABLE_ENTITY);
                 }
@@ -110,20 +118,24 @@ class OrderItemWebsiteController extends Controller implements HasMiddleware
                 return ApiResponse::success(__('crud.updated'));
             });
         } catch (InsufficientStockException $e) {
-            return ApiResponse::error($e->getMessage(), [
+            return ApiResponse::error(__('crud.no_available_quantity'), [
                 'product' => $e->productName,
                 'availableQuantity' => $e->availableQuantity,
             ], HttpStatusCode::UNPROCESSABLE_ENTITY);
         } catch (\Throwable $e) {
-            return ApiResponse::error(__('crud.server_error'), $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+            Log::error($e->getMessage(), ['exception' => $e]);
+            return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function deleteItem(int $itemId)
+    public function deleteItem(Request $request, int $itemId)
     {
         try {
-            return DB::transaction(function () use ($itemId) {
-                $item = OrderItem::with('order')->lockForUpdate()->findOrFail($itemId);
+            return DB::transaction(function () use ($request, $itemId) {
+                $item = OrderItem::with('order')
+                    ->whereHas('order', fn ($query) => $query->where('client_id', $request->user()->client_id))
+                    ->lockForUpdate()
+                    ->findOrFail($itemId);
                 $order = $item->order;
                 if ($order->isLockedForCheckout()) {
                     return ApiResponse::error('Order is locked for checkout.', [], HttpStatusCode::UNPROCESSABLE_ENTITY);
@@ -138,7 +150,8 @@ class OrderItemWebsiteController extends Controller implements HasMiddleware
                 return ApiResponse::success(__('crud.deleted'));
             });
         } catch (\Throwable $e) {
-            return ApiResponse::error(__('crud.server_error'), $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+            Log::error($e->getMessage(), ['exception' => $e]);
+            return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Website\Order\GuestCheckoutRequest;
 use App\Http\Resources\Order\Website\OrderResource;
 use App\Services\Order\CheckoutService;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -21,7 +22,8 @@ class OrderController extends Controller
 
             return ApiResponse::success(new OrderResource($order));
         } catch (\Throwable $e) {
-            return ApiResponse::error($e->getMessage());
+            Log::error($e->getMessage(), ['exception' => $e]);
+            return ApiResponse::error(__('crud.server_error'));
         }
     }
 }

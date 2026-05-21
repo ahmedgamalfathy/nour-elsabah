@@ -45,7 +45,9 @@ class StripePaymentService extends BasePaymentService implements PaymentGatewayI
         }
 
         $orderId = $request->input('orderId');
-        $order = Order::find($orderId);
+        $order = Order::where('id', $orderId)
+            ->where('client_id', $request->user()->client_id)
+            ->first();
         if(!$order){
             return ApiResponse::error(__('crud.not_found'),[],HttpStatusCode::NOT_FOUND);
         }
@@ -58,7 +60,7 @@ class StripePaymentService extends BasePaymentService implements PaymentGatewayI
         try {
             app(InventoryService::class)->assertStockAvailable($order);
         } catch (InsufficientStockException $e) {
-            return ApiResponse::error($e->getMessage(), [
+            return ApiResponse::error(__('crud.no_available_quantity'), [
                 'product' => $e->productName,
                 'availableQuantity' => $e->availableQuantity,
             ], HttpStatusCode::UNPROCESSABLE_ENTITY);
@@ -87,7 +89,9 @@ class StripePaymentService extends BasePaymentService implements PaymentGatewayI
         $response=$this->buildRequest('GET','/v1/checkout/sessions/'.$session_id);
          if($response->getData(true)['success']&& $response->getData(true)['data']['payment_status']==='paid') {
 
-            $order = Order::find($response->getData(true)['data']['metadata']['orderId']);
+            $order = Order::where('id', $response->getData(true)['data']['metadata']['orderId'])
+                ->where('client_id', $response->getData(true)['data']['metadata']['client_id'])
+                ->firstOrFail();
             $order->status = OrderStatus::CONFIRM->value;
             $order->save();
             DB::table('payment_callback')->insert([

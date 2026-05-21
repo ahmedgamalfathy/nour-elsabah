@@ -35,8 +35,8 @@ class ProductMediaController extends Controller
         return [
             new Middleware('auth:api'),
             new Middleware('permission:all_product_media', only:['index']),
-            new Middleware('permission:create_product_media', only:['create']),
-            new Middleware('permission:edit_product_media', only:['edit']),
+            new Middleware('permission:create_product_media', only:['store']),
+            new Middleware('permission:edit_product_media', only:['show']),
             new Middleware('permission:update_product_media', only:['update']),
             new Middleware('permission:destroy_product_media', only:['destroy']),
         ];

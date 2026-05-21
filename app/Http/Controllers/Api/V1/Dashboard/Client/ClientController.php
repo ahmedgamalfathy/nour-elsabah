@@ -29,8 +29,8 @@ class ClientController extends Controller implements HasMiddleware
         return [
             new Middleware('auth:api'),
             new Middleware('permission:all_clients', only:['index']),
-            new Middleware('permission:create_client', only:['create']),
-            new Middleware('permission:edit_client', only:['edit']),
+            new Middleware('permission:create_client', only:['store']),
+            new Middleware('permission:edit_client', only:['show']),
             new Middleware('permission:update_client', only:['update']),
             new Middleware('permission:destroy_client', only:['destroy']),
         ];

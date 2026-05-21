@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Website\Client;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use App\Models\Client\ClientUser;
+use App\Models\Client\ClientEmail;
 use App\Utils\PaginateCollection;
 use App\Http\Controllers\Controller;
 use App\Enums\ResponseCode\HttpStatusCode;
@@ -12,6 +13,7 @@ use App\Services\Client\ClientEmailService;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Log;
 use App\Http\Resources\Client\ClientEmails\ClientEmailResource;
 use App\Http\Requests\Client\ClientEmail\CreateClientEmailRequest;
 use App\Http\Requests\Client\ClientEmail\UpdateClientEmailRequest;
@@ -40,9 +42,12 @@ class ClientEmailWebsiteController extends Controller implements HasMiddleware
     public function store(CreateClientEmailRequest $createClientEmailRequest)
     {
         try{
-            $this->clientEmailService->createClientEmail($createClientEmailRequest->validated());
+            $data = $createClientEmailRequest->validated();
+            $data['clientId'] = $createClientEmailRequest->user()->client_id;
+            $this->clientEmailService->createClientEmail($data);
             return ApiResponse::success([], __('crud.created'), HttpStatusCode::CREATED);
         }catch (\Exception $e) {
+            Log::error($e->getMessage(), ['exception' => $e]);
             return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
 
@@ -50,11 +55,14 @@ class ClientEmailWebsiteController extends Controller implements HasMiddleware
     public function show(int $id)
     {
         try {
-            $clientEmail = $this->clientEmailService->editClientEmail($id);
+            $clientEmail = ClientEmail::where('id', $id)
+                ->where('client_id', request()->user()->client_id)
+                ->firstOrFail();
             return ApiResponse::success(new ClientEmailResource($clientEmail));
         }catch (ModelNotFoundException $th) {
             return ApiResponse::error(__('crud.not_found'), [], HttpStatusCode::NOT_FOUND);
         }catch (\Throwable $th) {
+            Log::error($th->getMessage(), ['exception' => $th]);
             return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
 
@@ -63,20 +71,37 @@ class ClientEmailWebsiteController extends Controller implements HasMiddleware
     }
     public function update(int $id,UpdateClientEmailRequest $updateClientEmailRequest)
     {
-        $ClientEmail = $this->clientEmailService->updateClientEmail($id, $updateClientEmailRequest->validated());
-        if(!$ClientEmail){
+        try {
+            $clientId = $updateClientEmailRequest->user()->client_id;
+            ClientEmail::where('id', $id)
+                ->where('client_id', $clientId)
+                ->firstOrFail();
+
+            $data = $updateClientEmailRequest->validated();
+            $data['clientId'] = $clientId;
+            $this->clientEmailService->updateClientEmail($id, $data);
+        } catch (ModelNotFoundException) {
             return ApiResponse::error( __('crud.not_found'),[], HttpStatusCode::NOT_FOUND);
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage(), ['exception' => $e]);
+            return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
+
         return ApiResponse::success([], __('crud.updated'));
     }
     public function destroy(int $id)
     {
         try{
+          ClientEmail::where('id', $id)
+              ->where('client_id', request()->user()->client_id)
+              ->firstOrFail();
+
           $this->clientEmailService->deleteClientEmail($id);
           return ApiResponse::success([], __('crud.deleted'), HttpStatusCode::OK);
         }catch (ModelNotFoundException $e) {
         return ApiResponse::error(__('crud.not_found'), [], HttpStatusCode::NOT_FOUND);
         }catch (\Exception $e) {
+        Log::error($e->getMessage(), ['exception' => $e]);
         return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
 

@@ -32,8 +32,8 @@ class CategoryController extends Controller implements HasMiddleware
         return [
             new Middleware('auth:api'),
             new Middleware('permission:all_categories', only:['index']),
-            new Middleware('permission:create_category', only:['create']),
-            new Middleware('permission:edit_category', only:['edit']),
+            new Middleware('permission:create_category', only:['store']),
+            new Middleware('permission:edit_category', only:['show']),
             new Middleware('permission:update_category', only:['update']),
             new Middleware('permission:destroy_category', only:['destroy']),
         ];

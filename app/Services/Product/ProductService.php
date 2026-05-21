@@ -11,8 +11,6 @@ use App\Filters\Product\FilterProduct;
 use App\Services\ProductMedia\ProductMediaService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-use function PHPUnit\Framework\isEmpty;
-
 class ProductService
 {
     public  $productMediaService;
@@ -22,7 +20,7 @@ class ProductService
         $this->productMediaService =$productMediaService;
         $this->uploadService =$uploadService;
     }
-    public function allProducts(){
+    public function allProducts(int $perPage = 10){
         return QueryBuilder::for(Product::class)
         ->defaultSort('-created_at')
         ->allowedFilters([
@@ -30,7 +28,7 @@ class ProductService
             AllowedFilter::exact('status'),
         ])
         ->orderBy('created_at', 'desc')
-        ->get();
+        ->paginate($perPage);
     }
     public function createProduct(array $data): Product
     {

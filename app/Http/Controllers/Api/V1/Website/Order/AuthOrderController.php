@@ -24,6 +24,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class AuthOrderController extends Controller implements HasMiddleware
@@ -51,19 +52,23 @@ class AuthOrderController extends Controller implements HasMiddleware
 
             return ApiResponse::success(new OrderResource($order));
         } catch (InsufficientStockException $e) {
-            return ApiResponse::error($e->getMessage(), [
+            return ApiResponse::error(__('crud.no_available_quantity'), [
                 'product' => $e->productName,
                 'availableQuantity' => $e->availableQuantity,
             ], HttpStatusCode::UNPROCESSABLE_ENTITY);
         } catch (Throwable $e) {
-            return ApiResponse::error(__('crud.server_error'), $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+            Log::error($e->getMessage(), ['exception' => $e]);
+            return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 
     public function show(int $id)
     {
         try {
-            $order = Order::with(['items', 'items.product'])->findOrFail($id);
+            $order = Order::with(['items', 'items.product'])
+                ->where('id', $id)
+                ->where('client_id', request()->user()->client_id)
+                ->firstOrFail();
 
             return ApiResponse::success(new OrderResource($order));
         } catch (ModelNotFoundException) {
@@ -76,8 +81,10 @@ class AuthOrderController extends Controller implements HasMiddleware
         $data = $request->validated();
 
         try {
-            return DB::transaction(function () use ($id, $data) {
-                $order = Order::findOrFail($id);
+            return DB::transaction(function () use ($request, $id, $data) {
+                $order = Order::where('id', $id)
+                    ->where('client_id', $request->user()->client_id)
+                    ->firstOrFail();
 
                 if ($order->isLockedForCheckout()) {
                     return ApiResponse::error('Order is locked for checkout.', [], HttpStatusCode::UNPROCESSABLE_ENTITY);
@@ -95,7 +102,8 @@ class AuthOrderController extends Controller implements HasMiddleware
         } catch (ModelNotFoundException) {
             return ApiResponse::error(__('crud.not_found'), [], HttpStatusCode::NOT_FOUND);
         } catch (Throwable $e) {
-            return ApiResponse::error(__('crud.server_error'), $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+            Log::error($e->getMessage(), ['exception' => $e]);
+            return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -106,7 +114,9 @@ class AuthOrderController extends Controller implements HasMiddleware
         try {
             return DB::transaction(function () use ($request, $data) {
                 $client = Client::findOrFail($request->user()->client_id);
-                $order = Order::findOrFail($data['orderId']);
+                $order = Order::where('id', $data['orderId'])
+                    ->where('client_id', $client->id)
+                    ->firstOrFail();
 
                 if ($order->isLockedForCheckout()) {
                     return ApiResponse::error('Order is locked for checkout.', [], HttpStatusCode::UNPROCESSABLE_ENTITY);
@@ -140,7 +150,8 @@ class AuthOrderController extends Controller implements HasMiddleware
                 ]);
             });
         } catch (Throwable $e) {
-            return ApiResponse::error(__('crud.server_error'), $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+            Log::error($e->getMessage(), ['exception' => $e]);
+            return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -153,8 +164,10 @@ class AuthOrderController extends Controller implements HasMiddleware
 
             $data = $request->validated();
 
-            return DB::transaction(function () use ($data) {
-                $order = Order::findOrFail($data['orderId']);
+            return DB::transaction(function () use ($request, $data) {
+                $order = Order::where('id', $data['orderId'])
+                    ->where('client_id', $request->user()->client_id)
+                    ->firstOrFail();
 
                 if ($order->isLockedForCheckout()) {
                     return ApiResponse::error('Order is locked for checkout.', [], HttpStatusCode::UNPROCESSABLE_ENTITY);
@@ -167,7 +180,8 @@ class AuthOrderController extends Controller implements HasMiddleware
                 return ApiResponse::success([], __('crud.updated'));
             });
         } catch (Throwable $e) {
-            return ApiResponse::error(__('crud.server_error'), $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+            Log::error($e->getMessage(), ['exception' => $e]);
+            return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -183,7 +197,8 @@ class AuthOrderController extends Controller implements HasMiddleware
                 ),
             ]);
         } catch (Throwable $e) {
-            return ApiResponse::error(__('crud.server_error'), $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+            Log::error($e->getMessage(), ['exception' => $e]);
+            return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -193,11 +208,9 @@ class AuthOrderController extends Controller implements HasMiddleware
             $data = $request->validated();
 
             $client = Client::findOrFail($request->user()->client_id);
-            $order = Order::findOrFail($data['orderId']);
-
-            if ($order->client_id !== $client->id) {
-                return ApiResponse::error('This order does not belong to you.', [], HttpStatusCode::FORBIDDEN);
-            }
+            $order = Order::where('id', $data['orderId'])
+                ->where('client_id', $client->id)
+                ->firstOrFail();
 
             if ($order->isLockedForCheckout()) {
                 return ApiResponse::error('Order is locked for checkout.', [], HttpStatusCode::UNPROCESSABLE_ENTITY);
@@ -218,7 +231,8 @@ class AuthOrderController extends Controller implements HasMiddleware
                 'order' => new OrderResource($order->fresh()),
             ]);
         } catch (Throwable $e) {
-            return ApiResponse::error(__('crud.server_error'), $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+            Log::error($e->getMessage(), ['exception' => $e]);
+            return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -228,11 +242,9 @@ class AuthOrderController extends Controller implements HasMiddleware
             $data = $request->validated();
 
             $client = Client::findOrFail($request->user()->client_id);
-            $order = Order::findOrFail($data['orderId']);
-
-            if ($order->client_id !== $client->id) {
-                return ApiResponse::error('This order does not belong to you.', [], HttpStatusCode::FORBIDDEN);
-            }
+            $order = Order::where('id', $data['orderId'])
+                ->where('client_id', $client->id)
+                ->firstOrFail();
 
             if ((int) $order->points_redeemed <= 0) {
                 return ApiResponse::error('No points were redeemed for this order.', [], HttpStatusCode::UNPROCESSABLE_ENTITY);
@@ -245,7 +257,8 @@ class AuthOrderController extends Controller implements HasMiddleware
                 'order' => new OrderResource($order->fresh()),
             ]);
         } catch (Throwable $e) {
-            return ApiResponse::error(__('crud.server_error'), $e->getMessage(), HttpStatusCode::INTERNAL_SERVER_ERROR);
+            Log::error($e->getMessage(), ['exception' => $e]);
+            return ApiResponse::error(__('crud.server_error'), [], HttpStatusCode::INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -11,7 +11,14 @@ class ClientAdrress extends Model
 {
     use HasFactory,SoftDeletes;
     protected $table = 'client_addresses';
-    protected $guarded = [];
+    protected $fillable = [
+        'client_id',
+        'address',
+        'street_number',
+        'city',
+        'region',
+        'is_main',
+    ];
 
     public function client()
     {

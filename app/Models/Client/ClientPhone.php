@@ -12,7 +12,12 @@ class ClientPhone extends Model
 {
     use HasFactory,SoftDeletes;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'client_id',
+        'phone',
+        'is_main',
+        'country_code',
+    ];
 
     public function client()
     {

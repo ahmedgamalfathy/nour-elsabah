@@ -52,16 +52,17 @@ use App\Http\Controllers\Api\V1\Website\Category\CategoryController as CategoryW
 use App\Http\Controllers\Api\V1\Website\Auth\Profile\ChangePasswordController as ChangePasswordWebsite ;
 
 //SendCodeController
-Route::prefix('v1/admin')->group(function () {
+Route::prefix('v1/admin/auth')->controller(AuthController::class)->group(function () {
+    Route::post('/login','login');
+});
+
+Route::prefix('v1/admin')->middleware('auth:api')->group(function () {
     Route::apiResource('coupons', CouponController::class);
     Route::post('coupons/{id}/toggle-status', [CouponController::class, 'toggleStatus']);
     Route::post('/send-notification',SendNotificationController::class);
     Route::get('/pages/{slug}', [StaticPageController::class, 'show']);
     Route::put('/pages/{slug}', [StaticPageController::class, 'update']);
-    Route::controller(AuthController::class)->prefix('auth')->group(function () {
-        Route::post('/login','login');
-        Route::post('/logout','logout');
-    });
+    Route::post('auth/logout',[AuthController::class, 'logout']);
     Route::post('/product-media/changeStatusMedia/{id}',[ProductMediaController::class ,'changeStatusProductMedia']);
     Route::post('/sliders/changeStatus/{id}',[SliderController::class ,'changeStatus']);
     Route::get('clients/clientCheckDefault',ClientCheckDefaultController::class);
@@ -158,7 +159,7 @@ Route::prefix('v1/website')->group(function(){
         Route::put('items/{itemId}', [OrderItemWebsiteController::class, 'updateItem']);
         Route::delete('items/{itemId}', [OrderItemWebsiteController::class, 'deleteItem']);
     });
-    Route::post('/payment/process', [PaymentController::class, 'paymentProcess']);
+    Route::post('/payment/process', [PaymentController::class, 'paymentProcess'])->middleware('auth:client');
     Route::get('/notifications',[NotificationController::class,'notifications']);
     Route::get('/auth_unread_notifications',[NotificationController::class,'auth_unread_notifications']);
     Route::get('/auth_read_notifications',[NotificationController::class,'auth_read_notifications']);

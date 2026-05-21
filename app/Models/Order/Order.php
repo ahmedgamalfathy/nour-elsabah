@@ -17,7 +17,26 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Order extends Model
 {
     use HasFactory;
-    protected $guarded = []; 
+
+    protected $fillable = [
+        'number',
+        'client_id',
+        'client_phone_id',
+        'client_email_id',
+        'client_address_id',
+        'status',
+        'discount',
+        'discount_type',
+        'total_cost',
+        'price',
+        'price_after_discount',
+        'points_earned',
+        'points_redeemed',
+        'points_discount_amount',
+        'coupon_id',
+        'coupon_discount',
+        'inventory_deducted',
+    ];
 
     protected function casts(): array
     {

@@ -28,8 +28,8 @@ class ClientEmailController extends Controller implements HasMiddleware
      return [
          new Middleware('auth:api'),
          new Middleware('permission:all_client_emails', only:['index']),
-         new Middleware('permission:create_client_email', only:['create']),
-         new Middleware('permission:edit_client_email', only:['edit']),
+         new Middleware('permission:create_client_email', only:['store']),
+         new Middleware('permission:edit_client_email', only:['show']),
          new Middleware('permission:update_client_email', only:['update']),
          new Middleware('permission:destroy_client_email', only:['destroy']),
      ];
