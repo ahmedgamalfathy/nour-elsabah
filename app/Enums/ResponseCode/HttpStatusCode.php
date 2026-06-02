@@ -11,6 +11,7 @@ enum HttpStatusCode: int
     case FORBIDDEN = 403;
     case NOT_FOUND = 404;
     case UNPROCESSABLE_ENTITY = 422;
+    case TOO_MANY_REQUESTS = 429;
     case INTERNAL_SERVER_ERROR = 500;
     case SERVICE_UNAVAILABLE = 503;
 }

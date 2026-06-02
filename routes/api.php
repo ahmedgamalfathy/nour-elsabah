@@ -53,7 +53,7 @@ use App\Http\Controllers\Api\V1\Website\Auth\Profile\ChangePasswordController as
 
 //SendCodeController
 Route::prefix('v1/admin/auth')->controller(AuthController::class)->group(function () {
-    Route::post('/login','login');
+    Route::post('/login','login')->middleware('throttle:5,1');
 });
 
 Route::prefix('v1/admin')->middleware('auth:api')->group(function () {
@@ -107,14 +107,14 @@ Route::prefix('v1/admin')->middleware('auth:api')->group(function () {
 });//admin
 Route::prefix('v1/website')->group(function(){
     Route::post('validate-coupon', ValidateCouponController::class) ->middleware('auth:client');;
-    Route::post('coupon-cart', [AuthOrderController::class,'couponCart']);
-    Route::post('cash-on-delivery', [AuthOrderController::class,'cashOnDelivery']);
+    Route::post('coupon-cart', [AuthOrderController::class,'couponCart'])->middleware('throttle:10,1');
+    Route::post('cash-on-delivery', [AuthOrderController::class,'cashOnDelivery'])->middleware('throttle:10,1');
     Route::get('/pages/{slug}', [StaticPageWebController::class, 'show']);
     Route::controller(AuthWebsiteController::class)->group(function () {
         Route::post('register', 'register');
-        Route::post('login', 'login');
+        Route::post('login', 'login')->middleware('throttle:5,1');
     });
-    Route::controller(ForgotPasswordController::class)->prefix("/forgotPassword")->group(function(){
+    Route::controller(ForgotPasswordController::class)->prefix("/forgotPassword")->middleware('throttle:3,1')->group(function(){
         Route::post("sendCode","sendCodeEmail");
         Route::post('verifyCode','verifyCodeEmail');
         Route::post('resendCode','resendCode');
@@ -137,7 +137,7 @@ Route::prefix('v1/website')->group(function(){
         'index' => 'productsWeb.index',
         'show'=>'productsWeb.show'
     ]);
-    Route::apiResource('orders-web',OrderWebsite::class)->only(['store'])->names([
+    Route::apiResource('orders-web',OrderWebsite::class)->only(['store'])->middleware('throttle:10,1')->names([
         'store' => 'ordersWeb.store',
     ]);//add orders-web
 
@@ -149,7 +149,7 @@ Route::prefix('v1/website')->group(function(){
     Route::put('change-password', ChangePasswordWebsite::class);
     Route::get('/BestSellingProducts',[BestSellingProductController::class ,'BestSellingProducts']);
     Route::get('/BestSellingProductsDetail/{id}',[BestSellingProductController::class ,'BestSellingProductsDetail']);
-    Route::post('orders-auth',[AuthOrderController::class,'store']);
+    Route::post('orders-auth',[AuthOrderController::class,'store'])->middleware('throttle:10,1');
     Route::get('orders-auth/{id}',[AuthOrderController::class,'show']);
     Route::put('orders-update/{id}',[AuthOrderController::class,'update']);
 
@@ -159,7 +159,7 @@ Route::prefix('v1/website')->group(function(){
         Route::put('items/{itemId}', [OrderItemWebsiteController::class, 'updateItem']);
         Route::delete('items/{itemId}', [OrderItemWebsiteController::class, 'deleteItem']);
     });
-    Route::post('/payment/process', [PaymentController::class, 'paymentProcess'])->middleware('auth:client');
+    Route::post('/payment/process', [PaymentController::class, 'paymentProcess'])->middleware(['auth:client', 'throttle:10,1']);
     Route::get('/notifications',[NotificationController::class,'notifications']);
     Route::get('/auth_unread_notifications',[NotificationController::class,'auth_unread_notifications']);
     Route::get('/auth_read_notifications',[NotificationController::class,'auth_read_notifications']);
