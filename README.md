@@ -30,3 +30,29 @@ Rather than writing traditional monolithic controller code, this project focuses
 ## 🔄 Request-Response Flow
 
 Every API interaction follows a strict architectural cycle:
+
+Route ➡️ Custom Form Request (Validation) ➡️ Controller ➡️ Service Layer (Business Logic) ➡️ Eloquent Model ➡️ API Resource/Collection (Formatting) ➡️ Clean JSON Response
+
+---
+
+## ⚡ Real-time Broadcasting Setup (Reverb)
+
+When a customer confirms a **Cash on Delivery** order:
+1. The status is updated to `OrderStatus::CASHONDELIVERY`.
+2. An event is broadcasted immediately:
+
+How to Run the Project Locally
+1. Clone the Repository
+   git clone [https://github.com/your-username/nour-elsabah.git](https://github.com/your-username/nour-elsabah.git)
+   cd nour-elsabah
+   
+2. Install Dependencies
+   composer install
+   npm install
+   
+3. Environment Setup
+   cp .env.example .env
+   php artisan key:generate
+   
+5. Run migrations & seed database
+   php artisan migrate --seed
